@@ -2,8 +2,8 @@ seed: 1682409321
 experiment:
   id: phenobench
 data:
-  name: phenobench
-  path_to_dataset: <path/to/dataset>
+  name: PDC
+  path_to_dataset: D:\BSc\phenobench\data
   num_workers: 4
   image_normalizer:
     name: single_image_normalizer
@@ -14,7 +14,7 @@ backbone:
 train:
   step_settings:
     - regular
-  max_epoch: 4096
+  max_epoch: 1
   n_gpus: 1
   benchmark: true
   loss: xentropy
@@ -26,8 +26,8 @@ train:
     - 10.02
   batch_size: 4
   shuffle: true
-  vis_train_every_x_epochs: 4096
-  postprocess_train_every_x_epochs: 4096
+  vis_train_every_x_epochs: 1
+  postprocess_train_every_x_epochs: 1
   color_data_augmentations:
     random_global_brightness:
       min_brightness_factor: 0.6
@@ -42,14 +42,14 @@ train:
       min_hue_factor: -0.0125
       max_hue_factor:  0.0125
   geometric_data_augmentations:
+    image_resize: 
+      x_resize: 256
+      y_resize: 256
     random_hflip: null
     random_vflip: null
     random_scale:
       min_scale: 1.0
       max_scale: 1.1
-    random_crop:
-      height: 768
-      width: 768
 val:
   step_settings:
     - regular

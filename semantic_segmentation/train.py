@@ -45,6 +45,7 @@ def load_config(path_to_config_file: str) -> Dict:
   return config
 
 def main():
+  print(pl.__version__)
   args = parse_args()
 
   cfg = load_config(args['config'])

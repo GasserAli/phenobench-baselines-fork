@@ -391,6 +391,60 @@ class MyRandomShearTransform(GeometricDataAugmentation):
 
     return image, anno
 
+class MyImageResizeTransform(GeometricDataAugmentation):
+  """ Resizes image
+  """
+
+  def __init__(self, x_resize: int, y_resize: int):
+    """ 
+      Args:
+      x_resize: the final x-axis size
+      y_resize: the final y-axis size
+    """
+    assert isinstance(x_resize, int) and x_resize > 0, "x_resize must be a positive integer"
+    assert isinstance(y_resize, int) and y_resize > 0, "y_resize must be a positive integer"
+
+    self.x_resize = x_resize
+    self.y_resize = y_resize    
+
+  
+  def __call__(self, image: torch.Tensor, anno: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    assert image.dim() == 3, f"Expected image to have 3 dimensions [C, H, W], got {image.shape}"
+    assert anno.dim() == 3, f"Expected annotation to have 3 dimensions [C, H, W], got {anno.shape}"
+    
+    # Add batch dimension
+    image = image.unsqueeze(0)
+    anno = anno.unsqueeze(0)
+
+    # Resize image (already float)
+    image = torch.nn.functional.interpolate(
+        image, 
+        size=(self.x_resize, self.y_resize), 
+        mode='bilinear', 
+        align_corners=False, 
+        antialias=True
+    )
+    
+    # Resize annotation (convert to float first)
+    anno = anno.float()  # Convert to float for interpolation
+    anno = torch.nn.functional.interpolate(
+        anno,
+        size=(self.x_resize, self.y_resize),
+        mode="nearest"
+    )
+    anno = anno.long()  # Convert back to long
+    
+    # Remove batch dimension if needed
+    image = image.squeeze(0)
+    anno = anno.squeeze(0)
+
+    # Shape checks
+    expected_shape = (self.x_resize, self.y_resize)
+    assert image.shape[1:] == expected_shape, f"Resized image shape mismatch: got {image.shape[1:]}, expected {expected_shape}"
+    assert anno.shape[1:] == expected_shape, f"Resized annotation shape mismatch: got {anno.shape[1:]}, expected {expected_shape}"
+
+    return image, anno
+    
 # class MyPaddingTransform(GeometricDataAugmentation):
 #   """ Apply padding.
 #   """
@@ -498,5 +552,11 @@ def get_geometric_augmentations(cfg, stage: str) -> List[GeometricDataAugmentati
       augmentor = RandomCropTransform(crop_height, crop_width)
       geometric_augmentations.append(augmentor)
 
+    if tf_name == 'image_resize':
+      x_resize = cfg[stage]['geometric_data_augmentations'][tf_name]['x_resize']
+      y_resize = cfg[stage]['geometric_data_augmentations'][tf_name]['y_resize']
+      augmentor = MyImageResizeTransform(x_resize, y_resize)
+      geometric_augmentations.append(augmentor)
+      
   assert len(geometric_augmentations) == len(cfg[stage]['geometric_data_augmentations'].keys())
   return geometric_augmentations

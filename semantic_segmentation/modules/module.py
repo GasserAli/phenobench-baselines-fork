@@ -129,7 +129,9 @@ class SegmentationNetwork(pl.LightningModule):
     for key in dict_keys:
       if key.startswith('loss'):
         loss_accumulated = torch.stack([x[key] for x in training_step_outputs])
+        #TODO: can log the average loss for each epoch here
         loss_avg = loss_accumulated.mean().detach()
+        #TODO: self.logger might contain all the different logged information you need
         self.logger.experiment.add_scalars(f'{key}', {'train': loss_avg}, epoch)
    
     # the following logging is required *ModelCheckpoint* to work as expected
@@ -138,18 +140,22 @@ class SegmentationNetwork(pl.LightningModule):
     self.log("train_loss", train_loss_avg, on_epoch=True, sync_dist=False)
 
     # compute final metrics over all batches
+    #TODO: Can log the mean iou per class and the mean iou over all classes
     iou_per_class = self.metric_train_iou.compute().detach()
     mIoU = iou_per_class.mean()
     self.metric_train_iou.reset()
 
+    #TODO: again self.logger.experiment might have all the needed logging information 
     for class_index, iou_class in enumerate(iou_per_class):
       self.logger.experiment.add_scalars(f"iou_class_{class_index}", {'train': iou_class}, epoch)
     self.logger.experiment.add_scalars("mIoU", {'train': mIoU}, epoch)
     self.log("train_mIoU", mIoU, on_epoch=True, sync_dist=False)
 
+    #TODO: save iou metrics to disk
     # path_to_classwise_iou_dir = os.path.join(self.trainer.log_dir, 'train', 'evaluation', 'iou-classwise', f'epoch-{epoch:06d}')
     # save_iou_metric(iou_per_class, path_to_classwise_iou_dir)
 
+  #TODO: ECE metrics can be added here or in the next function
   def validation_step(self, batch: dict, batch_idx: int) -> Dict[str, Any]:
     if not self.val_step_settings:
       raise ValueError('You need to specify the settings for the validation step.')
@@ -215,9 +221,11 @@ class SegmentationNetwork(pl.LightningModule):
 
     epoch = self.trainer.current_epoch
     
+    #TODO: Should add "test" to the dir name 
     path_to_classwise_iou_dir = os.path.join(self.trainer.log_dir, 'evaluation', 'iou-classwise',  f'epoch-{epoch:06d}')
     save_iou_metric(iou_per_class, path_to_classwise_iou_dir)
 
+  #TODO: for malek: probably need to return 1 here so that no lr scaling occurs
   def lr_scaling(self, current_epoch: int) -> float:
     warm_up_epochs = 16
     if current_epoch <= warm_up_epochs:
@@ -227,14 +235,19 @@ class SegmentationNetwork(pl.LightningModule):
 
     return lr_scale
 
+  #TODO: Can add the variation for the optimizers usage here 
   def configure_optimizers(self) -> Tuple[List[optim.Optimizer], List[optim.lr_scheduler.LambdaLR]]:
+   #TODO: does weight decay default to none if not specified?
     optimizer = optim.Adam(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
 
     # lambda1 = lambda epoch: pow((1 - (epoch / self.trainer.max_epochs)), 3.0) # 1.25
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=self.lr_scaling)
-
+    #TODO: how is the tuple later used?
     return [optimizer], [scheduler]
-
+  
+  def lr_scheduler_step(self, scheduler, optimizer_idx, metric):
+    # return super().lr_scheduler_step(scheduler, optimizer_idx, metric)
+    pass
 def save_iou_metric(metrics: torch.Tensor, path_to_dir: str) -> None:
   if not os.path.exists(path_to_dir):
     os.makedirs(path_to_dir)

@@ -68,6 +68,7 @@ class PDC(Dataset):
     assert mode in ['train', 'val', 'test']
     self.mode = mode
 
+    #TODO: preprocessing happens here
     self.img_normalizer = img_normalizer
     self.augmentations_geometric = augmentations_geometric
     self.augmentations_color = augmentations_color
@@ -225,6 +226,7 @@ class PDCModule(pl.LightningDataModule):
       # ----------- TRAIN -----------
       train_augmentations_geometric = get_geometric_augmentations(self.cfg, 'train')
       train_augmentations_color = get_color_augmentations(self.cfg, 'train')
+      #TODO: call for preprocessing data 
       self.train_ds = PDC(
           path_to_dataset,
           mode='train',
@@ -234,6 +236,7 @@ class PDCModule(pl.LightningDataModule):
   
       # ----------- VAL -----------
       val_augmentations_geometric = get_geometric_augmentations(self.cfg, 'val')
+      #TODO: call for preprocessing data 
       self.val_ds = PDC(
           path_to_dataset,
           mode='val',
@@ -244,6 +247,7 @@ class PDCModule(pl.LightningDataModule):
     if stage == 'test' or stage is None:
       # ----------- TEST -----------
       test_augmentations_geometric = get_geometric_augmentations(self.cfg, 'test')
+      #TODO: call for preprocessing data 
       self.test_ds = PDC(
           path_to_dataset,
           mode='test',
