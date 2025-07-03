@@ -1,4 +1,4 @@
 from callbacks.visualizer import get_visualizers, VisualizerCallback
 from callbacks.postprocessor import get_postprocessors, PostprocessorrCallback, ProbablisticSoftmaxPostprocessor
 from callbacks.config_callback import ConfigCallback
-from callbacks.logging_callbacks import ECECallback
+from callbacks.logging_callbacks import ECECallback, controlEval

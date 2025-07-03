@@ -92,6 +92,7 @@ class PDC(Dataset):
     self.img_to_tensor = transforms.ToTensor()
 
   def get_train_item(self, idx: int) -> Dict:
+    print("\n called get_train_item \n")
     path_to_current_img = os.path.join(self.path_to_train_images, self.filenames_train[idx])
     img_pil = Image.open(path_to_current_img)
     img = self.img_to_tensor(img_pil)  # [C x H x W] with values in [0, 1]
@@ -137,6 +138,11 @@ class PDC(Dataset):
         anno = anno[:, :, 0]
     anno = anno.astype(np.int64)
     anno = torch.Tensor(anno).type(torch.int64)  # [H x W]
+    anno = anno.unsqueeze(0)
+
+    for augmentor_geometric in self.augmentations_geometric:
+      img, anno = augmentor_geometric(img, anno)
+    anno = anno.squeeze(0)  # [H x W]
 
     img_before_norm = img.clone()
     img = self.img_normalizer.normalize(img)
@@ -163,6 +169,12 @@ class PDC(Dataset):
         anno = anno[:, :, 0]
     anno = anno.astype(np.int64)
     anno = torch.Tensor(anno).type(torch.int64)  # [H x W]
+    anno = anno.unsqueeze(0)
+
+
+    for augmentor_geometric in self.augmentations_geometric:
+      img, anno = augmentor_geometric(img, anno)
+    anno = anno.squeeze(0)  # [H x W]
 
     img_before_norm = img.clone()
     img = self.img_normalizer.normalize(img)

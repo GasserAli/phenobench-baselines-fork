@@ -1,3 +1,5 @@
 **/__pycache__/
 *.swp
 /exports
+/semantic_segmentation/q.log
+/semantic_segmentation/exports
