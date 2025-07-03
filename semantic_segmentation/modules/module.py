@@ -150,7 +150,7 @@ class SegmentationNetwork(pl.LightningModule):
       self.logger.experiment.add_scalars(f"iou_class_{class_index}", {'train': iou_class}, epoch)
     self.logger.experiment.add_scalars("mIoU", {'train': mIoU}, epoch)
     self.log("train_mIoU", mIoU, on_epoch=True, sync_dist=False)
-
+    # print(training_step_outputs[0]["logits"].shape)
     #TODO: save iou metrics to disk
     # path_to_classwise_iou_dir = os.path.join(self.trainer.log_dir, 'train', 'evaluation', 'iou-classwise', f'epoch-{epoch:06d}')
     # save_iou_metric(iou_per_class, path_to_classwise_iou_dir)
