@@ -137,6 +137,7 @@ class SegmentationNetwork(pl.LightningModule):
     # the following logging is required *ModelCheckpoint* to work as expected
     losses = torch.stack([x['loss'] for x in training_step_outputs])
     train_loss_avg = losses.mean().detach()
+    #TODO: might have a problem as this means that it double averages (resulting in the same value but with more computation) the train_loss values as on_epoch=True -> either on_epoch=False or place .log() in the train_step
     self.log("train_loss", train_loss_avg, on_epoch=True, sync_dist=False)
 
     # compute final metrics over all batches
@@ -149,6 +150,7 @@ class SegmentationNetwork(pl.LightningModule):
     for class_index, iou_class in enumerate(iou_per_class):
       self.logger.experiment.add_scalars(f"iou_class_{class_index}", {'train': iou_class}, epoch)
     self.logger.experiment.add_scalars("mIoU", {'train': mIoU}, epoch)
+    #TODO: might have a problem as this means that it double averages (resulting in the same value but with more computation) the train_mIoU values as on_epoch=True -> either on_epoch=False or place .log() in the train_step
     self.log("train_mIoU", mIoU, on_epoch=True, sync_dist=False)
     # print(training_step_outputs[0]["logits"].shape)
     torch.cuda.empty_cache()

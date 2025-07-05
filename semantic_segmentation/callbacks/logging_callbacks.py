@@ -5,6 +5,7 @@ import os
 import tifffile
 from torchmetrics.functional import calibration_error
 from callbacks import ProbablisticSoftmaxPostprocessor
+import numpy as np
 
 class ECECallback(Callback):
 
@@ -144,3 +145,10 @@ class ValidationLossCallback(Callback):
         else:
             print("Couldn't log validation loss as val_loss is None")
         return
+    
+class IoUCallback(Callback):
+    def __init__(self):
+        super().__init__()
+
+    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        return super().on_validation_batch_end(trainer, pl_module, outputs, batch, batch_idx, dataloader_idx)
