@@ -14,7 +14,7 @@ backbone:
 train:
   step_settings:
     - regular
-  max_epoch: 1
+  max_epoch: 2
   n_gpus: 1
   benchmark: true
   loss: xentropy

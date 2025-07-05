@@ -112,7 +112,8 @@ def main(args: dict):
                  lr_monitor, 
                  visualizer_callback, 
                  postprocessor_callback, 
-                 config_callback])
+                 config_callback,
+                 eceCallback])
 
   if args['ckpt_path'] is None:
     print("Train from scratch.")
