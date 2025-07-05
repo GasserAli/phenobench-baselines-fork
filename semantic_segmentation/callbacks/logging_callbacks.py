@@ -25,20 +25,20 @@ class ECECallback(Callback):
         print("entered on validation batch end in logging callbacks")
         if trainer.current_epoch == (trainer.max_epochs-1):
             y = batch["anno"]
-            print('\n',"batch anno shape",batch["anno"].shape,'\n')
+            # print('\n',"batch anno shape",batch["anno"].shape,'\n')
 
             softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
             logits = outputs["logits"]
-            print('\n',"preprocessing logits shape:",logits.shape,'\n')
+            # print('\n',"preprocessing logits shape:",logits.shape,'\n')
             logits = softmaxPostprocessor.process_logits(logits)
-            print('\n',"softmax shape:", logits.shape,'\n')
-            
+            # print('\n',"softmax shape:", logits.shape,'\n')
+
             self.ece_metric.update(logits, y)
             # self.predictions.append(logits.detach().cpu())
             # self.targets.append(y.detach().cpu())
     
     def on_validation_end(self, trainer, pl_module):
-        print('\n',"entered on validation end in logging callbacks"'\n')
+        # print('\n',"entered on validation end in logging callbacks"'\n')
 
         if trainer.current_epoch == (trainer.max_epochs-1):
             ece = self.ece_metric.compute()
@@ -73,7 +73,7 @@ class EntropyVisualizationCallback(Callback):
         self.name = "entropy"
         self.entropyValues = []
 
-    def calculate_entropy_image(softmax_output):
+    def calculate_entropy_image(self, softmax_output):
         """
         Calculate pixel-wise entropy from softmax probabilities.
         
@@ -119,12 +119,12 @@ class EntropyVisualizationCallback(Callback):
         for i, entropy_img in enumerate(entropy_images):
             fname = fnames[i].split('.')[0] + "_entropy.tif"  # Append _entropy to filename
             fpath = os.path.join(path_to_dir, fname)
-            tifffile.imsave(fpath, entropy_img)
+            tifffile.imwrite(fpath, entropy_img)
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         if trainer.current_epoch == (trainer.max_epochs-1):
             y = batch["anno"]
-            print('\n',"batch anno shape",batch["anno"].shape,'\n')
+            # print('\n',"batch anno shape",batch["anno"].shape,'\n')
             filenames = batch["fname"]
 
             path = os.path.join(trainer.log_dir, "val", "logging", f'epoch-{trainer.current_epoch:06d}')
@@ -133,7 +133,9 @@ class EntropyVisualizationCallback(Callback):
         
             softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
             logits = outputs["logits"]
+            # print(logits.shape)
             softmax_logits = softmaxPostprocessor.process_logits(logits)
+            # print(softmax_logits.shape)
             entropy = self.calculate_entropy_image(softmax_logits)
             self.save_entropy_images(entropy, filenames, path)
         return
@@ -146,17 +148,79 @@ class ValidationLossCallback(Callback):
 
     def on_validation_epoch_end(self, trainer, pl_module):
         #TODO: log the validation loss
-        val_loss = trainer.callback_metrics.get("val loss")
+        val_loss = trainer.callback_metrics.get("val_loss")
         if val_loss is not None:
-            wandb.log("val loss", val_loss)
+            wandb.log({"val loss": val_loss})
             print(f"logged val_loss: {val_loss}")
         else:
-            print("Couldn't log validation loss as val_loss is None")
+            print("Couldn't log validation loss as val_loss is None ")
         return
     
 class IoUCallback(Callback):
     def __init__(self):
         super().__init__()
 
-    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        return super().on_validation_batch_end(trainer, pl_module, outputs, batch, batch_idx, dataloader_idx)
+    def on_validation_epoch_end(self, trainer, pl_module):
+        #TODO: TASK: add per class validation IoU logging 
+        val_mIoU = trainer.callback_metrics.get("val_mIoU")
+        if not val_mIoU:
+            print(f"could not get the validation mIoU for epoch {trainer.current_epoch}")
+        else:
+            wandb.log({"validation mIoU": val_mIoU})
+        
+        if(trainer.current_epoch == trainer.max_epochs-1) and val_mIoU:
+            wandb.log({"Final validation mIoU": val_mIoU})
+
+
+        if trainer.current_epoch == trainer.max_epochs-1:
+            wandb.define_metric(name = "Per class validation mIoU", step_metric= "class index")
+
+            #TODO: hard coded value check if it is possible to get it from a network component  
+            num_classes = 3 
+            for class_idx in range(num_classes):
+                iou = trainer.callback_metrics.get(f"iou_class_{class_idx}")
+                # print(f"Class {class_idx} IoU: {iou:.4f}")
+                wandb.log({"class index": class_idx, "Per class validation mIoU": iou})
+                wandb.log({f"Class {class_idx} validation IoU": iou})
+            
+        return
+    
+    def on_train_epoch_end(self, trainer, pl_module):
+        #TODO: TASK: add per class validation IoU logging 
+        train_mIoU = trainer.callback_metrics.get("train_mIoU")
+        if not train_mIoU:
+            print(f"Could not get train mIoU for epoch {trainer.current_epoch}")
+        else:
+            wandb.log({"train mIoU": train_mIoU})
+        
+        if trainer.current_epoch == (trainer.max_epochs-1) and train_mIoU:
+            wandb.log({"Final train mIoU": train_mIoU})
+
+        if trainer.current_epoch == trainer.max_epochs-1:
+            wandb.define_metric(name = "Per class training mIoU", step_metric= "class index")
+
+            #TODO: hard coded value check if it is possible to get it from a network component  
+            num_classes = 3 
+            for class_idx in range(num_classes):
+                iou = trainer.callback_metrics.get(f"iou_class_{class_idx}")
+                print(f"Class {class_idx} IoU: {iou:.4f}")
+                wandb.log({"class index": class_idx, "Per class training mIoU": iou})
+                wandb.log({f"Class {class_idx} validation IoU": iou})
+
+        return
+
+class TrainLossCallback(Callback):
+    def __init__(self):
+        super().__init__()
+
+    def on_train_epoch_end(self, trainer, pl_module):
+        train_loss = trainer.callback_metrics.get("train_loss")
+        if not train_loss:
+            print(f"Could not get the train loss for epoch {trainer.current_epoch}")
+        else:
+            wandb.log({"Train Loss": train_loss})
+        if trainer.current_epoch == trainer.max_epochs-1 and train_loss:
+            wandb.log({"Final train loss": train_loss})
+        return
+
+    

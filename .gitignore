@@ -3,6 +3,5 @@
 /exports
 /semantic_segmentation/q.log
 /semantic_segmentation/exports
-/semantic_segmentation/wandb
+/wandb
 requirements.txt
-/semantic_segmentation/config
