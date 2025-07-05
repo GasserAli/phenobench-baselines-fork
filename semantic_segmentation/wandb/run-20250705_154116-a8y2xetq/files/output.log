@@ -1,0 +1,105 @@
+{'export_dir': './exports', 'config': './config/config_deeplab.yaml', 'ckpt_path': None, 'resume': False}
+Global seed set to 1682409321
+/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/loggers/wandb.py:347: UserWarning: There is a wandb run already in progress and newly created instances of `WandbLogger` will reuse this run. If this is not desired, call `wandb.finish()` before instantiating `WandbLogger`.
+  rank_zero_warn(
+logger <pytorch_lightning.loggers.wandb.WandbLogger object at 0x7fcb2b6d0a30>
+GPU available: True, used: True
+TPU available: False, using: 0 TPU cores
+IPU available: False, using: 0 IPUs
+HPU available: False, using: 0 HPUs
+Train from scratch.
+/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/trainer/configuration_validator.py:342: LightningDeprecationWarning: Base `Callback.on_train_batch_end` hook signature has changed in v1.5. The `dataloader_idx` argument will be removed in v1.7.
+  rank_zero_deprecation(
+
+ tf name + train  image_resize
+
+
+ tf name + train  random_hflip
+
+
+ tf name + train  random_vflip
+
+
+ tf name + train  random_scale
+
+
+ tf name + val  image_resize
+
+
+ tf name + val  random_hflip
+
+
+ tf name + val  random_vflip
+wandb: WARNING The project_name method is deprecated and will be removed in a future release. Please use `run.project` instead.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [2]
+
+  | Name             | Type         | Params
+--------------------------------------------------
+0 | network          | DeepLabV3    | 39.8 M
+1 | criterion        | CrossEntropy | 0
+2 | metric_train_iou | JaccardIndex | 0
+3 | metric_val_iou   | JaccardIndex | 0
+4 | metric_test_iou  | JaccardIndex | 0
+--------------------------------------------------
+39.8 M    Trainable params
+0         Non-trainable params
+39.8 M    Total params
+159.029   Total estimated model params size (MB)
+
+Sanity Checking: 0it [00:00, ?it/s]
+Traceback (most recent call last):
+  File "train.py", line 133, in train
+    main(args)
+  File "train.py", line 120, in main
+    trainer.fit(seg_module, datasetmodule)
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 769, in fit
+    self._call_and_handle_interrupt(
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 722, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 810, in _fit_impl
+    results = self._run(model, ckpt_path=self.ckpt_path)
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1235, in _run
+    results = self._run_stage()
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1322, in _run_stage
+    return self._run_train()
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1344, in _run_train
+    self._run_sanity_check()
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1412, in _run_sanity_check
+    val_loop.run()
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/loops/base.py", line 204, in run
+    self.advance(*args, **kwargs)
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/loops/dataloader/evaluation_loop.py", line 154, in advance
+    dl_outputs = self.epoch_loop.run(self._data_fetcher, dl_max_batches, kwargs)
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/loops/base.py", line 204, in run
+    self.advance(*args, **kwargs)
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/loops/epoch/evaluation_epoch_loop.py", line 111, in advance
+    batch = next(data_fetcher)
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/utilities/fetching.py", line 184, in __next__
+    return self.fetching_function()
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/utilities/fetching.py", line 259, in fetching_function
+    self._fetch_next_batch(self.dataloader_iter)
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/utilities/fetching.py", line 273, in _fetch_next_batch
+    batch = next(iterator)
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 521, in __next__
+    data = self._next_data()
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 1203, in _next_data
+    return self._process_data(data)
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 1229, in _process_data
+    data.reraise()
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/torch/_utils.py", line 434, in reraise
+    raise exception
+TypeError: Caught TypeError in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/torch/utils/data/_utils/worker.py", line 287, in _worker_loop
+    data = fetcher.fetch(index)
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 49, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/malek.ahmed/.local/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 49, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/malek.ahmed/phenobench-baselines-fork/semantic_segmentation/datasets/pdc.py", line 199, in __getitem__
+    items = self.get_val_item(idx)
+  File "/home/malek.ahmed/phenobench-baselines-fork/semantic_segmentation/datasets/pdc.py", line 144, in get_val_item
+    img, anno = augmentor_geometric(img, anno)
+  File "/home/malek.ahmed/phenobench-baselines-fork/semantic_segmentation/datasets/augmentations_geometry.py", line 426, in __call__
+    image_resized = torch.nn.functional.interpolate(
+TypeError: interpolate() got an unexpected keyword argument 'antialias'

@@ -1,0 +1,14 @@
+{'export_dir': './exports', 'config': './config/config_deeplab.yaml', 'ckpt_path': None, 'resume': False}
+Global seed set to 1682409321
+Traceback (most recent call last):
+  File "train.py", line 132, in train
+    main(args)
+  File "train.py", line 101, in main
+    eceCallback = ECECallback()
+  File "/home/malek.ahmed/phenobench-baselines-fork/semantic_segmentation/callbacks/logging_callbacks.py", line 18, in __init__
+    self.ece_metric= MulticlassCalibrationError(
+  File "/home/malek.ahmed/.conda/envs/phenobench_semseg/lib/python3.8/site-packages/torchmetrics/classification/calibration_error.py", line 273, in __init__
+    super().__init__(**kwargs)
+  File "/home/malek.ahmed/.conda/envs/phenobench_semseg/lib/python3.8/site-packages/torchmetrics/metric.py", line 150, in __init__
+    raise ValueError(f"Unexpected keyword arguments: {', '.join(kwargs_)}")
+ValueError: Unexpected keyword arguments: `task`

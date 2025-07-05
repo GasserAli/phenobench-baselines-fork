@@ -35,9 +35,10 @@ class SegmentationNetwork(pl.LightningModule):
     self.save_hyperparameters("learning_rate", "weight_decay")
 
     # evaluation metrics for all classes
-    self.metric_train_iou = torchmetrics.JaccardIndex(self.network.num_classes, reduction=None)
-    self.metric_val_iou = torchmetrics.JaccardIndex(self.network.num_classes, reduction=None)
-    self.metric_test_iou = torchmetrics.JaccardIndex(self.network.num_classes, reduction=None)
+    self.metric_train_iou = torchmetrics.JaccardIndex(task="multiclass", num_classes=self.network.num_classes, average=None)
+    self.metric_val_iou = torchmetrics.JaccardIndex(task="multiclass", num_classes=self.network.num_classes, average=None)
+    self.metric_test_iou = torchmetrics.JaccardIndex(task="multiclass", num_classes=self.network.num_classes, average=None)
+
 
     if train_step_settings is not None:
       self.train_step_settings = train_step_settings

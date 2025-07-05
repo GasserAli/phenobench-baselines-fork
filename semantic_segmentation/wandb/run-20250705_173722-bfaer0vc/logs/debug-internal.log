@@ -1,0 +1,7 @@
+{"time":"2025-07-05T17:37:22.14941894+02:00","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/home/malek.ahmed/phenobench-baselines-fork/semantic_segmentation/wandb/run-20250705_173722-bfaer0vc/logs/debug-core.log"}
+{"time":"2025-07-05T17:37:22.41196703+02:00","level":"INFO","msg":"created new stream","id":"bfaer0vc"}
+{"time":"2025-07-05T17:37:22.412024051+02:00","level":"INFO","msg":"stream: started","id":"bfaer0vc"}
+{"time":"2025-07-05T17:37:22.412047147+02:00","level":"INFO","msg":"sender: started","stream_id":"bfaer0vc"}
+{"time":"2025-07-05T17:37:22.412048856+02:00","level":"INFO","msg":"writer: Do: started","stream_id":"bfaer0vc"}
+{"time":"2025-07-05T17:37:22.412099829+02:00","level":"INFO","msg":"handler: started","stream_id":"bfaer0vc"}
+{"time":"2025-07-05T17:37:22.681030278+02:00","level":"INFO","msg":"Starting system monitor"}

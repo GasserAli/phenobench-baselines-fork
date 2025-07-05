@@ -5,6 +5,8 @@ import os
 import tifffile
 from torchmetrics.functional import calibration_error
 from callbacks import ProbablisticSoftmaxPostprocessor
+from torchmetrics.classification import MulticlassCalibrationError
+
 import numpy as np
 
 class ECECallback(Callback):
@@ -13,6 +15,11 @@ class ECECallback(Callback):
         super().__init__()
         self.predictions = []
         self.targets = []
+        self.ece_metric= MulticlassCalibrationError(
+            num_classes=3,  
+            norm='l1',  
+            n_bins=20 # Number of bins for calibration error
+        )
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         # print("entered on validation batch end in logging callbacks")
@@ -25,16 +32,17 @@ class ECECallback(Callback):
             print('\n',"preprocessing logits shape:",logits.shape,'\n')
             logits = softmaxPostprocessor.process_logits(logits)
             print('\n',"softmax shape:", logits.shape,'\n')
-            self.predictions.append(logits.detach().cpu())
-            self.targets.append(y.detach().cpu())
+            
+            self.ece_metric.update(logits, y)
+            # self.predictions.append(logits.detach().cpu())
+            # self.targets.append(y.detach().cpu())
     
     def on_validation_end(self, trainer, pl_module):
         print('\n',"entered on validation end in logging callbacks"'\n')
 
         if trainer.current_epoch == (trainer.max_epochs-1):
-            preds = torch.cat(self.predictions)
-            targets = torch.cat(self.targets)
-            ece = self._compute_ece(preds, targets)
+            ece = self.ece_metric.compute()
+            # ece = self._compute_ece(preds, targets)
             print('\n',"ECE is:", ece,'\n')
             wandb.log({"ECE Validation Dataset": ece})
 

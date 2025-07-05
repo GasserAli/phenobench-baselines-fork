@@ -104,7 +104,6 @@ def main(args: dict):
   # Setup trainer
   trainer = Trainer(
       benchmark=cfg['train']['benchmark'],
-      logger= WandbLogger(save_dir=args['export_dir']),
       gpus=cfg['train']['n_gpus'],
       default_root_dir=args['export_dir'],
       max_epochs=cfg['train']['max_epoch'],
@@ -131,7 +130,6 @@ def train(config = None):
   args = parse_args()
   with wandb.init(config=config, project="newPhenoTest"):
     main(args)
-
 
 if __name__ == '__main__':
   train()

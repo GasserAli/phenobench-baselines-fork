@@ -443,8 +443,8 @@ class MyImageResizeTransform(GeometricDataAugmentation):
           anno_resized = anno_resized.squeeze(0)
           # Shape checks
           expected_shape = (self.x_resize, self.y_resize)
-          assert image.shape[1:] == expected_shape, f"Resized image shape mismatch: got {image.shape[1:]}, expected {expected_shape}"
-          assert anno.shape[1:] == expected_shape, f"Resized annotation shape mismatch: got {anno.shape[1:]}, expected {expected_shape}"
+          assert image_resized.shape[1:] == expected_shape, f"Resized image shape mismatch: got {image_resized.shape[1:]}, expected {expected_shape}"
+          assert anno_resized.shape[1:] == expected_shape, f"Resized annotation shape mismatch: got {anno_resized.shape[1:]}, expected {expected_shape}"
       # Debug prints
       print(f"\nResized shapes - Image: {image_resized.shape}, Anno: {anno_resized.shape}\n")
       
