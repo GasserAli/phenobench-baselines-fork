@@ -249,9 +249,9 @@ class SegmentationNetwork(pl.LightningModule):
    #TODO: does weight decay default to none if not specified?
     if self.optimizer == "adam":
       optimizer = optim.Adam(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
-    elif self.optmizer == "adamw":
+    elif self.optimizer == "adamw":
       optimizer = optim.AdamW(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
-    elif self.optmizer == "rmsprop":
+    elif self.optimizer == "rmsprop":
       optimizer = optim.RMSprop(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
 
     # lambda1 = lambda epoch: pow((1 - (epoch / self.trainer.max_epochs)), 3.0) # 1.25

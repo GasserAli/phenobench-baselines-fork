@@ -22,7 +22,7 @@ class ECECallback(Callback):
         )
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        print("entered on validation batch end in logging callbacks")
+        # print("entered on validation batch end in logging callbacks")
         if trainer.current_epoch == (trainer.max_epochs-1):
             y = batch["anno"]
             # print('\n',"batch anno shape",batch["anno"].shape,'\n')
