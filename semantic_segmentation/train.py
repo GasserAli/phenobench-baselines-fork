@@ -142,6 +142,5 @@ def train(config = None):
   with wandb.init(config=config, project="newPhenoTest"):
     main(args)
 
-
 if __name__ == '__main__':
   train()
