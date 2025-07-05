@@ -55,9 +55,9 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str):
   cfg['git-commit'] = get_git_commit_hash()
 
   for i in ["train", "val", "test"]:
-    cfg[f"{i}"][batch_size] = batch_size
+    cfg[f"{i}"]["batch_size"] = batch_size
     if i == "train":
-      cfg[f"{i}"][learning_rate] = learning_rate
+      cfg[f"{i}"]["learning_rate"] = learning_rate
   print(cfg)
 
   if cfg.get('seed') is None:
@@ -149,10 +149,12 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str):
 
 def train(config = None):
   args = parse_args()
-  learning_rate = config.learning_rate
-  batch_size = config.batch_size
-  optimizer = config.optimizer
+
   with wandb.init(config=config):
+    config = wandb.config
+    learning_rate = config.learning_rate
+    batch_size = config.batch_size
+    optimizer = config.optimizer
     main(args, learning_rate, batch_size, optimizer)
 
 if __name__ == '__main__':

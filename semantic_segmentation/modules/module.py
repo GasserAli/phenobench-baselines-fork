@@ -32,7 +32,7 @@ class SegmentationNetwork(pl.LightningModule):
     self.criterion = criterion
     self.learning_rate = learning_rate
     self.weight_decay = weight_decay
-    self.optmizer = optimizer
+    self.optimizer = optimizer
 
     self.save_hyperparameters("learning_rate", "weight_decay")
 
