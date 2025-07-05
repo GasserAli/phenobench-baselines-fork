@@ -19,7 +19,8 @@ class SegmentationNetwork(pl.LightningModule):
   def __init__(self, network: nn.Module, 
                      criterion: nn.Module, 
                      learning_rate: float, 
-                     weight_decay: float, 
+                     weight_decay: float,
+                     optimizer: str = "adam",
                      train_step_settings: Optional[List[str]] = None,
                      val_step_settings: Optional[List[str]] = None,
                      test_step_settings: Optional[List[str]] = None,
@@ -31,6 +32,7 @@ class SegmentationNetwork(pl.LightningModule):
     self.criterion = criterion
     self.learning_rate = learning_rate
     self.weight_decay = weight_decay
+    self.optimizer = optimizer
 
     self.save_hyperparameters("learning_rate", "weight_decay")
 
@@ -239,12 +241,18 @@ class SegmentationNetwork(pl.LightningModule):
     else:
       lr_scale = pow((1 - ((current_epoch - (warm_up_epochs + 1)) / (self.trainer.max_epochs - (warm_up_epochs + 1)))), 3.0)
 
-    return lr_scale
+    return 1
 
   #TODO: Can add the variation for the optimizers usage here 
   def configure_optimizers(self) -> Tuple[List[optim.Optimizer], List[optim.lr_scheduler.LambdaLR]]:
+   
    #TODO: does weight decay default to none if not specified?
-    optimizer = optim.Adam(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
+    if self.optimizer == "adam":
+      optimizer = optim.Adam(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
+    elif self.optmizer == "adamw":
+      optimizer = optim.AdamW(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
+    elif self.optmizer == "rmsprop":
+      optimizer = optim.RMSprop(self.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
 
     # lambda1 = lambda epoch: pow((1 - (epoch / self.trainer.max_epochs)), 3.0) # 1.25
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=self.lr_scaling)

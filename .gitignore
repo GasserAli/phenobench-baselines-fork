@@ -9,3 +9,5 @@ requirements.txt
 /semantic_segmentation/exports
 /wandb
 requirements.txt
+/semantic_segmentation/wandb
+/q.log
