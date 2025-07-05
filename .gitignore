@@ -1,2 +1,6 @@
 **/__pycache__/
 *.swp
+/wandb
+requirements.txt
+/exports
+/semantic_segmentation/config
