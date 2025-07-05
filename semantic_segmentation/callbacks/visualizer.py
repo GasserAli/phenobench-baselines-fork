@@ -10,7 +10,7 @@ import torch
 from pytorch_lightning.callbacks import Callback
 from torchvision import transforms
 
-
+#TODO: mask blending with actual image method 
 def blend_images(image1: np.ndarray, image2: np.ndarray, alpha: float = 0.5) -> np.ndarray:
   """ Blend two images 
 
@@ -269,6 +269,7 @@ class VisualizerCallback(Callback):
       for visualizer in self.visualizers:
         visualizer.save_visualize_batch(path, outputs, batch)
 
+  #TODO: epoch visualization frequency here doesnt match the train visualization as one takes epoch+1 and the other takes epoch respectively
   def on_validation_batch_end(self, trainer, pl_module, outputs: Dict[str, Any], batch, batch_idx, dataloader_idx):
     # visualize
     epoch = trainer.current_epoch

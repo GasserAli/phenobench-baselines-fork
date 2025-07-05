@@ -13,10 +13,13 @@ import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
-from callbacks import (ConfigCallback, PostprocessorrCallback,
+from callbacks import (ConfigCallback, PostprocessorrCallback, ECECallback, ValidationLossCallback,
+                       EntropyVisualizationCallback, IoUCallback, TrainLossCallback,
                        VisualizerCallback, get_postprocessors, get_visualizers)
 from datasets import get_data_module
 from modules import get_backbone, get_criterion, module
+from pytorch_lightning.loggers import WandbLogger
+import wandb
 
 
 def get_git_commit_hash() -> str:
@@ -44,9 +47,9 @@ def load_config(path_to_config_file: str) -> Dict:
 
   return config
 
-def main():
-  args = parse_args()
-
+def main(args: dict):
+  # args = parse_args()
+  # print(args)
   cfg = load_config(args['config'])
   cfg['git-commit'] = get_git_commit_hash()
 
@@ -96,6 +99,13 @@ def main():
   postprocessor_callback = PostprocessorrCallback(
       get_postprocessors(cfg), cfg['train']['postprocess_train_every_x_epochs'], cfg['val']['postprocess_val_every_x_epochs'])
   config_callback = ConfigCallback(cfg)
+  eceCallback = ECECallback()
+  entropyVisualizationCallback = EntropyVisualizationCallback()
+  iouCallback = IoUCallback()
+  trainLossCallback = TrainLossCallback()
+  validationLossCallback = ValidationLossCallback()
+
+  # controlCallback = controlEval()
 
   # Setup trainer
   trainer = Trainer(
@@ -108,7 +118,13 @@ def main():
                  lr_monitor, 
                  visualizer_callback, 
                  postprocessor_callback, 
-                 config_callback])
+                 config_callback,
+                 eceCallback,
+                 eceCallback,
+                 entropyVisualizationCallback,
+                 iouCallback,
+                 trainLossCallback,
+                 validationLossCallback])
 
   if args['ckpt_path'] is None:
     print("Train from scratch.")
@@ -122,6 +138,10 @@ def main():
   else:
     raise RuntimeError("Can't train any model since the settings are invalid.")
 
+def train(config = None):
+  args = parse_args()
+  with wandb.init(config=config, project="newPhenoTest"):
+    main(args)
 
 if __name__ == '__main__':
-  main()
+  train()

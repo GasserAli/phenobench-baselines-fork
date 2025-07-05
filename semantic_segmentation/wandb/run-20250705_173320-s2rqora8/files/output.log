@@ -1,0 +1,14 @@
+{'export_dir': './exports', 'config': './config/config_deeplab.yaml', 'ckpt_path': None, 'resume': False}
+Global seed set to 1682409321
+Traceback (most recent call last):
+  File "train.py", line 132, in train
+    main(args)
+  File "train.py", line 77, in main
+    seg_module = module.SegmentationNetwork(network,
+  File "/home/malek.ahmed/phenobench-baselines-fork/semantic_segmentation/modules/module.py", line 38, in __init__
+    self.metric_train_iou = torchmetrics.JaccardIndex(self.network.num_classes, reduction=None)
+  File "/home/malek.ahmed/.conda/envs/phenobench_semseg/lib/python3.8/site-packages/torchmetrics/classification/jaccard.py", line 472, in __new__
+    task = ClassificationTask.from_str(task)
+  File "/home/malek.ahmed/.conda/envs/phenobench_semseg/lib/python3.8/site-packages/torchmetrics/utilities/enums.py", line 47, in from_str
+    me = super().from_str(value.replace("-", "_"), source=source)
+AttributeError: 'int' object has no attribute 'replace'
