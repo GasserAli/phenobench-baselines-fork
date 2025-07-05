@@ -120,6 +120,7 @@ def main(args: dict):
                  postprocessor_callback, 
                  config_callback,
                  eceCallback,
+                 eceCallback,
                  entropyVisualizationCallback,
                  iouCallback,
                  trainLossCallback,

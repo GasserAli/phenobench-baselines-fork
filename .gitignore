@@ -4,5 +4,4 @@
 /semantic_segmentation/q.log
 /semantic_segmentation/exports
 /wandb
-/semantic_segmentation/config/config_deeplab.yaml
 requirements.txt
