@@ -17,6 +17,8 @@ from callbacks import (ConfigCallback, PostprocessorrCallback, ECECallback, cont
                        VisualizerCallback, get_postprocessors, get_visualizers)
 from datasets import get_data_module
 from modules import get_backbone, get_criterion, module
+from pytorch_lightning.loggers import WandbLogger
+import wandb
 
 
 def get_git_commit_hash() -> str:
@@ -44,10 +46,9 @@ def load_config(path_to_config_file: str) -> Dict:
 
   return config
 
-def main():
-  print(pl.__version__)
-  args = parse_args()
-
+def main(args: dict):
+  # args = parse_args()
+  print(args)
   cfg = load_config(args['config'])
   cfg['git-commit'] = get_git_commit_hash()
 
@@ -103,6 +104,7 @@ def main():
   # Setup trainer
   trainer = Trainer(
       benchmark=cfg['train']['benchmark'],
+      logger= WandbLogger(save_dir=args['export_dir']),
       gpus=cfg['train']['n_gpus'],
       default_root_dir=args['export_dir'],
       max_epochs=cfg['train']['max_epoch'],
@@ -111,8 +113,7 @@ def main():
                  lr_monitor, 
                  visualizer_callback, 
                  postprocessor_callback, 
-                 config_callback,
-                 eceCallback])
+                 config_callback])
 
   if args['ckpt_path'] is None:
     print("Train from scratch.")
@@ -126,7 +127,11 @@ def main():
   else:
     raise RuntimeError("Can't train any model since the settings are invalid.")
 
+def train(config = None):
+  args = parse_args()
+  with wandb.init(config=config, project="newPhenoTest"):
+    main(args)
+
 
 if __name__ == '__main__':
-  main()
-
+  train()
