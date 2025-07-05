@@ -47,11 +47,18 @@ def load_config(path_to_config_file: str) -> Dict:
 
   return config
 
-def main(args: dict):
+def main(args: dict, learning_rate: float, batch_size: int, optimizer: str):
   # args = parse_args()
   # print(args)
+
   cfg = load_config(args['config'])
   cfg['git-commit'] = get_git_commit_hash()
+
+  for i in ["train", "val", "test"]:
+    cfg[f"{i}"][batch_size] = batch_size
+    if i == "train":
+      cfg[f"{i}"][learning_rate] = learning_rate
+  print(cfg)
 
   if cfg.get('seed') is None:
     seed_val = int(time.time())
@@ -71,6 +78,7 @@ def main(args: dict):
                                             criterion, 
                                             cfg['train']['learning_rate'], 
                                             cfg['train']['weight_decay'], 
+                                            optimizer,
                                             train_step_settings = cfg['train']['step_settings'], 
                                             val_step_settings = cfg['val']['step_settings'],
                                             ckpt_path = args['ckpt_path'])
@@ -79,6 +87,7 @@ def main(args: dict):
                                             criterion, 
                                             cfg['train']['learning_rate'], 
                                             cfg['train']['weight_decay'], 
+                                            optimizer,
                                             train_step_settings = cfg['train']['step_settings'],
                                             val_step_settings = cfg['val']['step_settings'])
 
@@ -140,8 +149,32 @@ def main(args: dict):
 
 def train(config = None):
   args = parse_args()
-  with wandb.init(config=config, project="newPhenoTest"):
-    main(args)
+  learning_rate = config.learning_rate
+  batch_size = config.batch_size
+  optimizer = config.optimizer
+  with wandb.init(config=config):
+    main(args, learning_rate, batch_size, optimizer)
 
 if __name__ == '__main__':
-  train()
+  sweep_config = {
+    'method': 'grid',
+    'metric': { 
+        'name': 'val_loss',
+        'goal': 'minimize'
+    },
+    'parameters': {
+        'batch_size': {
+            'values': [8, 16, 32]
+        },
+        'optimizer': {
+            'values': ['adam', 'adamw', 'rmsprop']
+        },
+        'learning_rate': {
+            'values': [0.0001]
+        },
+    }
+  }
+
+  sweep_id = wandb.sweep(sweep_config, project="newPhenoTest")
+  # train()
+  wandb.agent(sweep_id = sweep_id, project="newPhenoTest", function=train)
