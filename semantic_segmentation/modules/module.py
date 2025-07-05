@@ -149,6 +149,7 @@ class SegmentationNetwork(pl.LightningModule):
     #TODO: again self.logger.experiment might have all the needed logging information 
     for class_index, iou_class in enumerate(iou_per_class):
       self.logger.experiment.add_scalars(f"iou_class_{class_index}", {'train': iou_class}, epoch)
+      self.log(f"iou_class_{class_index}", iou_class, on_epoch=True, sync_dist=False)
     self.logger.experiment.add_scalars("mIoU", {'train': mIoU}, epoch)
     #TODO: might have a problem as this means that it double averages (resulting in the same value but with more computation) the train_mIoU values as on_epoch=True -> either on_epoch=False or place .log() in the train_step
     self.log("train_mIoU", mIoU, on_epoch=True, sync_dist=False)
@@ -193,6 +194,7 @@ class SegmentationNetwork(pl.LightningModule):
 
     for class_index, iou_class in enumerate(iou_per_class):
       self.logger.experiment.add_scalars(f"iou_class_{class_index}", {'val': iou_class}, epoch)
+      self.log(f"iou_class_{class_index}", iou_class, on_epoch=True, sync_dist=False)
     self.logger.experiment.add_scalars("mIoU", {'val': mIoU}, epoch)
     self.log("val_mIoU", mIoU, on_epoch=True, sync_dist=False)
 

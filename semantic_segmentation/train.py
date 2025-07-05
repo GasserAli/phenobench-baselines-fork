@@ -13,7 +13,8 @@ import pytorch_lightning as pl
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
-from callbacks import (ConfigCallback, PostprocessorrCallback, ECECallback, controlEval,
+from callbacks import (ConfigCallback, PostprocessorrCallback, ECECallback, ValidationLossCallback,
+                       EntropyVisualizationCallback, IoUCallback, TrainLossCallback,
                        VisualizerCallback, get_postprocessors, get_visualizers)
 from datasets import get_data_module
 from modules import get_backbone, get_criterion, module
@@ -48,7 +49,7 @@ def load_config(path_to_config_file: str) -> Dict:
 
 def main(args: dict):
   # args = parse_args()
-  print(args)
+  # print(args)
   cfg = load_config(args['config'])
   cfg['git-commit'] = get_git_commit_hash()
 
@@ -99,12 +100,16 @@ def main(args: dict):
       get_postprocessors(cfg), cfg['train']['postprocess_train_every_x_epochs'], cfg['val']['postprocess_val_every_x_epochs'])
   config_callback = ConfigCallback(cfg)
   eceCallback = ECECallback()
+  entropyVisualizationCallback = EntropyVisualizationCallback()
+  iouCallback = IoUCallback()
+  trainLossCallback = TrainLossCallback()
+  validationLossCallback = ValidationLossCallback()
+
   # controlCallback = controlEval()
 
   # Setup trainer
   trainer = Trainer(
       benchmark=cfg['train']['benchmark'],
-      logger= WandbLogger(save_dir=args['export_dir']),
       gpus=cfg['train']['n_gpus'],
       default_root_dir=args['export_dir'],
       max_epochs=cfg['train']['max_epoch'],
@@ -113,7 +118,12 @@ def main(args: dict):
                  lr_monitor, 
                  visualizer_callback, 
                  postprocessor_callback, 
-                 config_callback])
+                 config_callback,
+                 eceCallback,
+                 entropyVisualizationCallback,
+                 iouCallback,
+                 trainLossCallback,
+                 validationLossCallback])
 
   if args['ckpt_path'] is None:
     print("Train from scratch.")
