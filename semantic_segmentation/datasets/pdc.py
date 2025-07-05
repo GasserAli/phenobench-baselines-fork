@@ -68,6 +68,7 @@ class PDC(Dataset):
     assert mode in ['train', 'val', 'test']
     self.mode = mode
 
+    #TODO: preprocessing happens here
     self.img_normalizer = img_normalizer
     self.augmentations_geometric = augmentations_geometric
     self.augmentations_color = augmentations_color
@@ -91,6 +92,7 @@ class PDC(Dataset):
     self.img_to_tensor = transforms.ToTensor()
 
   def get_train_item(self, idx: int) -> Dict:
+    # print("\n called get_train_item \n")
     path_to_current_img = os.path.join(self.path_to_train_images, self.filenames_train[idx])
     img_pil = Image.open(path_to_current_img)
     img = self.img_to_tensor(img_pil)  # [C x H x W] with values in [0, 1]
@@ -136,6 +138,11 @@ class PDC(Dataset):
         anno = anno[:, :, 0]
     anno = anno.astype(np.int64)
     anno = torch.Tensor(anno).type(torch.int64)  # [H x W]
+    anno = anno.unsqueeze(0)
+
+    for augmentor_geometric in self.augmentations_geometric:
+      img, anno = augmentor_geometric(img, anno)
+    anno = anno.squeeze(0)  # [H x W]
 
     img_before_norm = img.clone()
     img = self.img_normalizer.normalize(img)
@@ -162,6 +169,12 @@ class PDC(Dataset):
         anno = anno[:, :, 0]
     anno = anno.astype(np.int64)
     anno = torch.Tensor(anno).type(torch.int64)  # [H x W]
+    anno = anno.unsqueeze(0)
+
+
+    for augmentor_geometric in self.augmentations_geometric:
+      img, anno = augmentor_geometric(img, anno)
+    anno = anno.squeeze(0)  # [H x W]
 
     img_before_norm = img.clone()
     img = self.img_normalizer.normalize(img)
@@ -225,6 +238,7 @@ class PDCModule(pl.LightningDataModule):
       # ----------- TRAIN -----------
       train_augmentations_geometric = get_geometric_augmentations(self.cfg, 'train')
       train_augmentations_color = get_color_augmentations(self.cfg, 'train')
+      #TODO: call for preprocessing data 
       self.train_ds = PDC(
           path_to_dataset,
           mode='train',
@@ -234,6 +248,7 @@ class PDCModule(pl.LightningDataModule):
   
       # ----------- VAL -----------
       val_augmentations_geometric = get_geometric_augmentations(self.cfg, 'val')
+      #TODO: call for preprocessing data 
       self.val_ds = PDC(
           path_to_dataset,
           mode='val',
@@ -244,6 +259,7 @@ class PDCModule(pl.LightningDataModule):
     if stage == 'test' or stage is None:
       # ----------- TEST -----------
       test_augmentations_geometric = get_geometric_augmentations(self.cfg, 'test')
+      #TODO: call for preprocessing data 
       self.test_ds = PDC(
           path_to_dataset,
           mode='test',

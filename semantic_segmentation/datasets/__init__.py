@@ -10,4 +10,4 @@ def get_data_module(cfg: Dict) -> pl.LightningDataModule:
   if dataset_name == 'PDC':
     return PDCModule(cfg)
   else:
-    assert False, "There is no parser for: {dataset_name}."
+    assert False, f"There is no parser for: {dataset_name}."

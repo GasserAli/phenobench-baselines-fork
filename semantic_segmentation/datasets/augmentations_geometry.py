@@ -391,6 +391,65 @@ class MyRandomShearTransform(GeometricDataAugmentation):
 
     return image, anno
 
+class MyImageResizeTransform(GeometricDataAugmentation):
+  """ Resizes image
+  """
+
+  def __init__(self, x_resize, y_resize):
+    """ 
+      Args:
+      x_resize: the final x-axis size
+      y_resize: the final y-axis size
+    """
+    assert isinstance(x_resize, int) and x_resize > 0, "x_resize must be a positive integer"
+    assert isinstance(y_resize, int) and y_resize > 0, "y_resize must be a positive integer"
+
+    self.x_resize = x_resize
+    self.y_resize = y_resize  
+
+  
+  def __call__(self, image: torch.Tensor, anno: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+      # Input validation
+      assert image.dim() in [3, 4], f"Image must be [C,H,W] or [B,C,H,W], got {image.shape}"
+      assert anno.dim() in [3, 4], f"Annotation must be [C,H,W] or [B,C,H,W], got {anno.shape}"
+      
+      # Store original batch info
+      has_batch_dim = image.dim() == 4
+      if not has_batch_dim:
+          image = image.unsqueeze(0)
+          anno = anno.unsqueeze(0)
+      
+      # Convert annotation to float temporarily
+      anno_float = anno.float()
+      
+      # Resize both tensors
+      image_resized = torch.nn.functional.interpolate(
+          image,
+          size=(self.x_resize, self.y_resize),
+          mode='bilinear',
+          align_corners=False,
+          antialias=True
+      )
+      
+      anno_resized = torch.nn.functional.interpolate(
+          anno_float,
+          size=(self.x_resize, self.y_resize),
+          mode='nearest'
+      ).long()  # Convert back to long immediately
+      
+      # Remove batch dim if it wasn't originally present
+      if not has_batch_dim:
+          image_resized = image_resized.squeeze(0)
+          anno_resized = anno_resized.squeeze(0)
+          # Shape checks
+          expected_shape = (self.x_resize, self.y_resize)
+          assert image_resized.shape[1:] == expected_shape, f"Resized image shape mismatch: got {image.shape[1:]}, expected {expected_shape}"
+          assert anno_resized.shape[1:] == expected_shape, f"Resized annotation shape mismatch: got {anno.shape[1:]}, expected {expected_shape}"
+      # Debug prints
+      # print(f"\nResized shapes - Image: {image_resized.shape}, Anno: {anno_resized.shape}\n")
+      
+      return image_resized, anno_resized
+    
 # class MyPaddingTransform(GeometricDataAugmentation):
 #   """ Apply padding.
 #   """
@@ -441,6 +500,8 @@ def get_geometric_augmentations(cfg, stage: str) -> List[GeometricDataAugmentati
     #   padding_mode = cfg[stage]['geometric_data_augmentations'][tf_name]['padding_mode']
     #   augmentor = MyPaddingTransform(padding_size, padding_mode)
     #   geometric_augmentations.append(augmentor)
+
+    # print("\n", f'tf name + {stage} ', tf_name, '\n')
 
     if tf_name == 'random_hflip':
       augmentor = RandomHorizontalFlipTransform()
@@ -498,5 +559,11 @@ def get_geometric_augmentations(cfg, stage: str) -> List[GeometricDataAugmentati
       augmentor = RandomCropTransform(crop_height, crop_width)
       geometric_augmentations.append(augmentor)
 
+    if tf_name == 'image_resize':
+      x_resize = cfg[stage]['geometric_data_augmentations'][tf_name]['x_resize']
+      y_resize = cfg[stage]['geometric_data_augmentations'][tf_name]['y_resize']
+      augmentor = MyImageResizeTransform(x_resize, y_resize)
+      geometric_augmentations.append(augmentor)
+      
   assert len(geometric_augmentations) == len(cfg[stage]['geometric_data_augmentations'].keys())
   return geometric_augmentations

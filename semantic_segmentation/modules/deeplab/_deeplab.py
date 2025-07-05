@@ -31,6 +31,7 @@ class DeepLabHeadV3Plus(nn.Module):
     self.project = nn.Sequential(
         nn.Conv2d(low_level_channels, 48, 1, bias=False),
         nn.BatchNorm2d(48),
+        # nn.InstanceNorm2d(48),
         nn.ReLU(inplace=True),
     )
 

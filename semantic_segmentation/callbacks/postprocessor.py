@@ -143,6 +143,7 @@ class KeepEmbeddingsPostprocessor(Postprocessor):
       assert len(output.shape) == 3
       np.save(fpath, output)
 
+#TODO: Postprocess function that converts logits to softmax
 class ProbablisticSoftmaxPostprocessor(Postprocessor):
   """ Convert the predicted logits into softmax probabilities. """
 
@@ -202,6 +203,7 @@ class ProbablisticSoftmaxPostprocessor(Postprocessor):
   def save_postprocessed_embeddings(self, processed_embeddings: torch.Tensor, path_to_dir: str, fnames: List[str]) -> None:
     return
 
+#TODO: can use this class to log ECE as it converts the logits to class ids giving easy comparison between preds and targets
 class ArgMaxClassPostprocessor(Postprocessor):
   """ Convert the predicted logits into class ids. """
 
@@ -225,7 +227,7 @@ class ArgMaxClassPostprocessor(Postprocessor):
 
   def process_embeddings(self, embeddings: torch.Tensor) -> Union[torch.Tensor, None]:
     return
-
+#TODO: look into this function and what it does
   def save_postprocessed_logits(self, processed_logits: Union[torch.Tensor, None], path_to_dir: str, fnames: List[str]) -> None:
     """ Save predicted probabilites for each image as a tiff image.
 

@@ -1,0 +1,47 @@
+{'export_dir': './exports', 'config': './config/config_deeplab.yaml', 'ckpt_path': None, 'resume': False}
+Global seed set to 1682409321
+logger True
+GPU available: True, used: True
+TPU available: False, using: 0 TPU cores
+IPU available: False, using: 0 IPUs
+HPU available: False, using: 0 HPUs
+Train from scratch.
+/home/malek.ahmed/.local/lib/python3.8/site-packages/pytorch_lightning/trainer/configuration_validator.py:342: LightningDeprecationWarning: Base `Callback.on_train_batch_end` hook signature has changed in v1.5. The `dataloader_idx` argument will be removed in v1.7.
+  rank_zero_deprecation(
+
+ tf name + train  image_resize
+
+
+ tf name + train  random_hflip
+
+
+ tf name + train  random_vflip
+
+
+ tf name + train  random_scale
+
+
+ tf name + val  image_resize
+
+
+ tf name + val  random_hflip
+
+
+ tf name + val  random_vflip
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [2]
+
+  | Name             | Type                   | Params
+------------------------------------------------------------
+0 | network          | DeepLabV3              | 39.8 M
+1 | criterion        | CrossEntropy           | 0
+2 | metric_train_iou | MulticlassJaccardIndex | 0
+3 | metric_val_iou   | MulticlassJaccardIndex | 0
+4 | metric_test_iou  | MulticlassJaccardIndex | 0
+------------------------------------------------------------
+39.8 M    Trainable params
+0         Non-trainable params
+39.8 M    Total params
+159.029   Total estimated model params size (MB)
+
+Epoch 0:   0%|          | 0/1123 [00:00<?, ?it/s]Processed steps during training:  ['regular']
+Epoch 0:  20%|██        | 230/1123 [00:39<02:32,  5.86it/s, loss=3.08, v_num=1]

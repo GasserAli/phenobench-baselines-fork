@@ -4,3 +4,8 @@
 requirements.txt
 /exports
 /semantic_segmentation/config
+/exports
+/semantic_segmentation/q.log
+/semantic_segmentation/exports
+/wandb
+requirements.txt
