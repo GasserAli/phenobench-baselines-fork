@@ -140,7 +140,7 @@ class ValidationLossCallback(Callback):
 
     def on_validation_epoch_end(self, trainer, pl_module):
         #TODO: log the validation loss
-        val_loss = trainer.callback_metrics.get("val loss")
+        val_loss = trainer.callback_metrics.get("val_loss")
         if val_loss is not None:
             wandb.log({"val loss": val_loss})
             print(f"logged val_loss: {val_loss}")
