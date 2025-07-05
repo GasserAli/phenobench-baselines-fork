@@ -392,7 +392,7 @@ class MyRandomShearTransform(GeometricDataAugmentation):
     return image, anno
 
 class MyImageResizeTransform(GeometricDataAugmentation):
-    """ Resizes image
+  """ Resizes image
   """
 
   def __init__(self, x_resize, y_resize):
