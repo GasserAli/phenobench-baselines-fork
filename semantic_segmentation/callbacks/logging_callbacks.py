@@ -134,7 +134,7 @@ class EntropyVisualizationCallback(Callback):
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         #TODO: make this run only on the last batch of the last epoch
-        if trainer.current_epoch == (trainer.max_epochs-1):
+        if trainer.current_epoch == (trainer.max_epochs-1) and batch_idx == trainer.num_val_batches[0]-1:
             y = batch["anno"]
             # print('\n',"batch anno shape",batch["anno"].shape,'\n')
             filenames = batch["fname"]
@@ -152,7 +152,6 @@ class EntropyVisualizationCallback(Callback):
             self.save_entropy_images(entropy, filenames, path)
         return
 
-        # return super().on_validation_batch_end(trainer, pl_module, outputs, batch, batch_idx, dataloader_idx)
 
 class ValidationLossCallback(Callback):
     def __init__(self):
@@ -163,9 +162,9 @@ class ValidationLossCallback(Callback):
         val_loss = trainer.callback_metrics.get("val_loss")
         if val_loss is not None:
             wandb.log({"val loss": val_loss})
-            print(f"logged val_loss: {val_loss}")
+            print(f"\nlogged val_loss: {val_loss}\n")
         else:
-            print("Couldn't log validation loss as val_loss is None ")
+            print("\nCouldn't log validation loss as val_loss is None \n")
         return
     
 class IoUCallback(Callback):
