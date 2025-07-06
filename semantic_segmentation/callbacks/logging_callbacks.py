@@ -6,6 +6,7 @@ import tifffile
 from torchmetrics.functional import calibration_error
 from callbacks import ProbablisticSoftmaxPostprocessor
 from torchmetrics.classification import MulticlassCalibrationError
+from PIL import Image
 
 import numpy as np
 
@@ -104,6 +105,8 @@ class EntropyVisualizationCallback(Callback):
             fnames: List of filenames (length B)
             path_to_dir: Directory to save images
         """
+
+        print(f"\n entropy tensor shape: {entropy_tensor.shape}\n")
         path_to_dir = os.path.join(path_to_dir, self.name)
         if not os.path.exists(path_to_dir):
             os.makedirs(path_to_dir, exist_ok=True)
@@ -113,15 +116,24 @@ class EntropyVisualizationCallback(Callback):
             entropy_tensor = entropy_tensor.cpu()
         
         with torch.no_grad():
-            entropy_images = entropy_tensor.squeeze(1).numpy().astype(np.float32)  # [B, H, W]
+            entropy_images = entropy_tensor.squeeze(1).numpy()  # [B, H, W]
         
-        # Save each entropy image
         for i, entropy_img in enumerate(entropy_images):
-            fname = fnames[i].split('.')[0] + "_entropy.tif"  # Append _entropy to filename
+            # 1. Normalize to [0, 255] for PNG
+            # Entropy typically ranges [0, log(num_classes)] - normalize accordingly
+            max_entropy = np.log(entropy_tensor.shape[1]) if entropy_tensor.shape[1] > 1 else 1.0
+            normalized_img = (entropy_img / max_entropy * 255).astype(np.uint8)
+            
+            # 2. Create filename
+            fname = os.path.splitext(fnames[i])[0] + "_entropy.png"
             fpath = os.path.join(path_to_dir, fname)
-            tifffile.imwrite(fpath, entropy_img)
+            
+            # 3. Save as PNG
+            Image.fromarray(normalized_img).save(fpath)
+            # print(f"Saved entropy image to {fpath}")
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        #TODO: make this run only on the last batch of the last epoch
         if trainer.current_epoch == (trainer.max_epochs-1):
             y = batch["anno"]
             # print('\n',"batch anno shape",batch["anno"].shape,'\n')
