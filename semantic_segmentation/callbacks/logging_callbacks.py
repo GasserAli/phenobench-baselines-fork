@@ -133,7 +133,6 @@ class EntropyVisualizationCallback(Callback):
             # print(f"Saved entropy image to {fpath}")
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        #TODO: make this run only on the last batch of the last epoch
         if trainer.current_epoch == (trainer.max_epochs-1) and batch_idx == trainer.num_val_batches[0]-1:
             y = batch["anno"]
             # print('\n',"batch anno shape",batch["anno"].shape,'\n')
