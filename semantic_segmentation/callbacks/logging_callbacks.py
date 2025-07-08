@@ -7,6 +7,7 @@ from torchmetrics.functional import calibration_error
 from callbacks import ProbablisticSoftmaxPostprocessor
 from torchmetrics.classification import MulticlassCalibrationError
 from PIL import Image
+from typing import List
 
 import numpy as np
 
@@ -72,7 +73,6 @@ class EntropyVisualizationCallback(Callback):
     def __init__(self):
         super().__init__()
         self.name = "entropy"
-        self.entropyValues = []
 
     def calculate_entropy_image(self, softmax_output):
         """
@@ -134,8 +134,6 @@ class EntropyVisualizationCallback(Callback):
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         if trainer.current_epoch == (trainer.max_epochs-1) and batch_idx == trainer.num_val_batches[0]-1:
-            y = batch["anno"]
-            # print('\n',"batch anno shape",batch["anno"].shape,'\n')
             filenames = batch["fname"]
 
             path = os.path.join(trainer.log_dir, "val", "logging", f'epoch-{trainer.current_epoch:06d}')
@@ -233,4 +231,57 @@ class TrainLossCallback(Callback):
             wandb.log({"Final train loss": train_loss})
         return
 
+class UncertaintyCallbacks(Callback):
+    def __init__(self):
+        super().__init__()
+        self.validationSamples : List[float] = []
+        self.testSamples : List[float] = []
+        self.softmaxProcessor = ProbablisticSoftmaxPostprocessor()
+
+    def _calculate_mean_entropy_batch(self, softmaxInput):
+        eps = 1e-12
+        entropy = -torch.sum(softmaxInput * torch.log2(softmaxInput+ eps), dim=1)
+
+        batch_mean = entropy.mean().item()
+
+        return batch_mean
+        
+    def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, unused = 0):
+        preds = outputs["logits"]
+
+        softmax_values = self.softmaxProcessor.process_logits(preds)
+
+        batch_mean = self._calculate_mean_entropy_batch(softmax_values)
+        
+        self.testSamples.append(batch_mean)
+
+        return
     
+    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        if trainer.current_epoch == trainer.max_epochs-1:
+            preds = outputs["logits"]
+
+            softmax_values = self.softmaxProcessor.process_logits(preds)
+
+            batch_mean = self._calculate_mean_entropy_batch(softmax_values)
+            
+            self.validationSamples.append(batch_mean)
+
+        return
+         
+    def on_test_end(self, trainer, pl_module):
+        if self.testSamples:
+            testUncertainty = torch.tensor(self.testSamples).mean().item()
+            wandb.log({"Average test samples entropy": testUncertainty})
+            if self.validationSamples:
+                aleatoricUncertainty = self.validationSamples + self.testSamples
+                meanAleatoricUncertainty = torch.tensor(aleatoricUncertainty).mean().item()
+                wandb.log({"Aleatoric Uncertainty": meanAleatoricUncertainty})
+        return 
+    
+        
+    def on_fit_end(self, trainer, pl_module):
+        if self.validationSamples:
+            validationUncertainty = torch.tensor(self.validationSamples).mean().item()
+            wandb.log({"Average validation samples entropy": validationUncertainty})
+        return  

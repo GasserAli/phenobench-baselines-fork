@@ -15,7 +15,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
 from callbacks import (ConfigCallback, PostprocessorrCallback, ECECallback, ValidationLossCallback,
                        EntropyVisualizationCallback, IoUCallback, TrainLossCallback,
-                       VisualizerCallback, get_postprocessors, get_visualizers)
+                       VisualizerCallback, get_postprocessors, get_visualizers, UncertaintyCallbacks)
 from datasets import get_data_module
 from modules import get_backbone, get_criterion, module
 from pytorch_lightning.loggers import WandbLogger
@@ -47,7 +47,7 @@ def load_config(path_to_config_file: str) -> Dict:
 
   return config
 
-def main(args: dict, learning_rate: float, batch_size: int, optimizer: str):
+def main(args: dict, learning_rate: float, batch_size: int, optimizer: str, resize: int):
   # args = parse_args()
   # print(args)
 
@@ -56,6 +56,8 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str):
 
   for i in ["train", "val", "test"]:
     cfg[f"{i}"]["batch_size"] = batch_size
+    cfg[f"{i}"]["geometric_data_augmentations"]["image_resize"]["x_resize"] = resize
+    cfg[f"{i}"]["geometric_data_augmentations"]["image_resize"]["y_resize"] = resize
     if i == "train":
       cfg[f"{i}"]["learning_rate"] = learning_rate
   print(cfg)
@@ -113,6 +115,7 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str):
   iouCallback = IoUCallback()
   trainLossCallback = TrainLossCallback()
   validationLossCallback = ValidationLossCallback()
+  UncertaintyCallback = UncertaintyCallbacks()
 
   # controlCallback = controlEval()
 
@@ -133,7 +136,8 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str):
                  entropyVisualizationCallback,
                  iouCallback,
                  trainLossCallback,
-                 validationLossCallback])
+                 validationLossCallback,
+                 UncertaintyCallback])
 
   if args['ckpt_path'] is None:
     print("Train from scratch.")
@@ -155,7 +159,8 @@ def train(config = None):
     learning_rate = config.learning_rate
     batch_size = config.batch_size
     optimizer = config.optimizer
-    main(args, learning_rate, batch_size, optimizer)
+    resize = config.resize
+    main(args, learning_rate, batch_size, optimizer, resize)
 
 if __name__ == '__main__':
   sweep_config = {
