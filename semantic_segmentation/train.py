@@ -15,7 +15,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
 from callbacks import (ConfigCallback, PostprocessorrCallback, ECECallback, ValidationLossCallback,
                        EntropyVisualizationCallback, IoUCallback, TrainLossCallback,
-                       VisualizerCallback, get_postprocessors, get_visualizers)
+                       VisualizerCallback, get_postprocessors, get_visualizers, UncertaintyCallbacks)
 from datasets import get_data_module
 from modules import get_backbone, get_criterion, module
 from pytorch_lightning.loggers import WandbLogger
@@ -115,6 +115,7 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str, resi
   iouCallback = IoUCallback()
   trainLossCallback = TrainLossCallback()
   validationLossCallback = ValidationLossCallback()
+  UncertaintyCallback = UncertaintyCallbacks()
 
   # controlCallback = controlEval()
 
@@ -135,7 +136,8 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str, resi
                  entropyVisualizationCallback,
                  iouCallback,
                  trainLossCallback,
-                 validationLossCallback])
+                 validationLossCallback,
+                 UncertaintyCallback])
 
   if args['ckpt_path'] is None:
     print("Train from scratch.")
