@@ -9,7 +9,7 @@ import oyaml as yaml
 from pytorch_lightning import Trainer
 
 from callbacks import (ConfigCallback, PostprocessorrCallback,
-                       VisualizerCallback, get_postprocessors, get_visualizers)
+                       VisualizerCallback, get_postprocessors, get_visualizers,ECECallbackTest,EntropyVisualizationCallback,TestLossCallback,IoUCallback)
 from datasets import get_data_module
 from modules import get_backbone, get_criterion, module
 
@@ -55,11 +55,16 @@ def main():
   postprocessor_callback = PostprocessorrCallback(
       get_postprocessors(cfg), cfg['train']['postprocess_train_every_x_epochs'])
   config_callback = ConfigCallback(cfg)
+  ece_callback = ECECallbackTest()
+  entropy_callback = EntropyVisualizationCallback()
+  test_loss_callback = TestLossCallback()
+  iou_callback = IoUCallback()
+  
 
   # Setup trainer
   trainer = Trainer(default_root_dir=args['export_dir'],
                     gpus=cfg['test']['n_gpus'],
-                    callbacks=[visualizer_callback, postprocessor_callback, config_callback])
+                    callbacks=[visualizer_callback, postprocessor_callback, config_callback,ece_callback, entropy_callback, test_loss_callback, iou_callback],)
   trainer.test(seg_module, datasetmodule, ckpt_path=args['ckpt_path'])
 
 
