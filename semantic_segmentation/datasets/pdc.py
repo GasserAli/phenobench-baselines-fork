@@ -142,22 +142,26 @@ class PDC(Dataset):
 
     for augmentor_geometric in self.augmentations_geometric:
       img, anno = augmentor_geometric(img, anno)
+      
     anno = anno.squeeze(0)  # [H x W]
 
     img_before_norm = img.clone()
     img = self.img_normalizer.normalize(img)
 
+    
     mask_3 = anno == 3
     anno[mask_3] = 1 
 
     mask_4 = anno == 4
     anno[mask_4] = 2
     
+    
     return {'input_image_before_norm': img_before_norm, 
             'input_image': img, 
             'anno': anno, 
             'fname': self.filenames_val[idx]}
 
+  #TODO:change image size
   def get_test_item(self, idx: int) -> Dict:
     path_to_current_img = os.path.join(self.path_to_test_images, self.filenames_test[idx])
     img_pil = Image.open(path_to_current_img)
@@ -184,7 +188,6 @@ class PDC(Dataset):
 
     mask_4 = anno == 4
     anno[mask_4] = 2
-    
     return {'input_image_before_norm': img_before_norm, 
             'input_image': img, 
             'anno': anno, 

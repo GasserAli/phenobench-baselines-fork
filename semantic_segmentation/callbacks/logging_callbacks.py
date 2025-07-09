@@ -64,73 +64,45 @@ class ECECallback(Callback):
         )
     
     def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        if trainer.current_epoch == (trainer.max_epochs-1):
-            y = batch["anno"]
-            # print('\n',"batch anno shape",batch["anno"].shape,'\n')
-
-            softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
-            logits = outputs["logits"]
-            # print('\n',"preprocessing logits shape:",logits.shape,'\n')
-            logits = softmaxPostprocessor.process_logits(logits)
-            # print('\n',"softmax shape:", logits.shape,'\n')
-
-            self.ece_metric_test.update(logits, y)
-            # self.predictions.append(logits.detach().cpu())
-            # self.targets.append(y.detach().cpu())
-            
-    def on_test_end(self, trainer, pl_module):
-        print('\n',"entered on test end in logging callbacks"'\n')
-
-        if trainer.current_epoch == (trainer.max_epochs-1):
-            ece = self.ece_metric_test.compute()
-            # ece = self._compute_ece(preds, targets)
-            print('\n',"ECE Test is:", ece,'\n')
-            wandb.log({"ECE Test Dataset": ece})
-
-class ECECallbackTest(Callback):
-
-    def __init__(self):
-        super().__init__()
-        self.predictions = []
-        self.targets = []
-
-        self.ece_metric_test= MulticlassCalibrationError(
-            num_classes=3,  
-            norm='l1',  
-            n_bins=20 # Number of bins for calibration error
-        )
         
-    def _compute_ece(self, preds, targets, n_bins=15):
-        return calibration_error(
-            preds, 
-            targets,
-            n_bins=n_bins,
-            norm='l1'
-        )
-    
-    def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        if trainer.current_epoch == (trainer.max_epochs-1):
-            y = batch["anno"]
-            # print('\n',"batch anno shape",batch["anno"].shape,'\n')
+        y = batch["anno"]
+        # print('\n',"batch anno shape",batch["anno"].shape,'\n')
 
-            softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
-            logits = outputs["logits"]
-            # print('\n',"preprocessing logits shape:",logits.shape,'\n')
-            logits = softmaxPostprocessor.process_logits(logits)
-            # print('\n',"softmax shape:", logits.shape,'\n')
+        softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
+        logits = outputs["logits"]
+        # print('\n',"preprocessing logits shape:",logits.shape,'\n')
+        logits = softmaxPostprocessor.process_logits(logits)
 
-            self.ece_metric_test.update(logits, y)
-            # self.predictions.append(logits.detach().cpu())
-            # self.targets.append(y.detach().cpu())
+        self.ece_metric_test.update(logits, y)
             
     def on_test_end(self, trainer, pl_module):
         print('\n',"entered on test end in logging callbacks"'\n')
+        ece = self.ece_metric_test.compute()
+        # ece = self._compute_ece(preds, targets)
+        print('\n',"ECE Test is:", ece,'\n')
+        wandb.log({"ECE Test Dataset": ece})
 
-        if trainer.current_epoch == (trainer.max_epochs-1):
-            ece = self.ece_metric_test.compute()
-            # ece = self._compute_ece(preds, targets)
-            print('\n',"ECE Test is:", ece,'\n')
-            wandb.log({"ECE Test Dataset": ece})
+
+    def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        y = batch["anno"]
+        # print('\n',"batch anno shape",batch["anno"].shape,'\n')
+
+        softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
+        logits = outputs["logits"]
+        # print('\n',"preprocessing logits shape:",logits.shape,'\n')
+        logits = softmaxPostprocessor.process_logits(logits)
+        # print('\n',"softmax shape:", logits.shape,'\n')
+
+        self.ece_metric_test.update(logits, y)
+        # self.predictions.append(logits.detach().cpu())
+        # self.targets.append(y.detach().cpu())
+            
+    def on_test_end(self, trainer, pl_module):
+        print('\n',"entered on test end in logging callbacks"'\n')
+        ece = self.ece_metric_test.compute()
+        # ece = self._compute_ece(preds, targets)
+        print('\n',"ECE Test is:", ece,'\n')
+        wandb.log({"ECE Test Dataset": ece})
        
                    
 class controlEval(Callback):
@@ -210,25 +182,26 @@ class EntropyVisualizationCallback(Callback):
             # print(f"Saved entropy image to {fpath}")
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        if trainer.current_epoch == (trainer.max_epochs-1) and batch_idx == trainer.num_val_batches[0]-1:
-            filenames = batch["fname"]
+        filenames = batch["fname"]
 
-            path = os.path.join(trainer.log_dir, "val", "logging", f'epoch-{trainer.current_epoch:06d}')
-            if not os.path.exists(path):
-                os.makedirs(path, exist_ok=True)
+        path = os.path.join(trainer.log_dir, "val", "logging", f'epoch-{trainer.current_epoch:06d}')
+        if not os.path.exists(path):
+            os.makedirs(path, exist_ok=True)
         
-            softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
-            logits = outputs["logits"]
-            # print(logits.shape)
-            softmax_logits = softmaxPostprocessor.process_logits(logits)
-            # print(softmax_logits.shape)
-            entropy = self.calculate_entropy_image(softmax_logits)
-            self.save_entropy_images(entropy, filenames, path)
+        softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
+        logits = outputs["logits"]
+        # print(logits.shape)
+        softmax_logits = softmaxPostprocessor.process_logits(logits)
+        # print(softmax_logits.shape)
+        entropy = self.calculate_entropy_image(softmax_logits)
+        self.save_entropy_images(entropy, filenames, path)
         return
     
     def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        print("visualization callback on test batch end")
-        if trainer.current_epoch == (trainer.max_epochs-1) and batch_idx == trainer.num_val_batches[0]-1:
+        
+        if batch_idx == trainer.num_test_batches[0]-1:
+            print("visualization callback on test batch end")
+            
             filenames = batch["fname"]
 
             path = os.path.join(trainer.log_dir, "test", "logging", f'epoch-{trainer.current_epoch:06d}')
@@ -333,21 +306,20 @@ class IoUCallback(Callback):
             print(f"Could not get test mIoU for epoch {trainer.current_epoch}")
         else:
             wandb.log({"test mIoU": test_mIoU})
-            print(f"test mIoU: {test_mIoU}")
+            print(f"test mIoU=: {test_mIoU}")
         
-        if trainer.current_epoch == (trainer.max_epochs-1) and test_mIoU:
+        if test_mIoU:
             wandb.log({"Final test mIoU": test_mIoU})
 
-        if trainer.current_epoch == trainer.max_epochs-1:
-            wandb.define_metric(name = "Per class test mIoU", step_metric= "class index")
+        wandb.define_metric(name = "Per class test mIoU", step_metric= "class index")
 
-            #TODO: hard coded value check if it is possible to get it from a network component  
-            num_classes = 3 
-            for class_idx in range(num_classes):
-                iou = trainer.callback_metrics.get(f"iou_class_{class_idx}")
-                print(f"Class {class_idx} IoU: {iou:.4f}")
-                wandb.log({"class index": class_idx, "Per class test mIoU": iou})
-                wandb.log({f"Class {class_idx} validation IoU": iou})
+        #TODO: hard coded value check if it is possible to get it from a network component  
+        num_classes = 3 
+        for class_idx in range(num_classes):
+            iou = trainer.callback_metrics.get(f"test_iou_class_{class_idx}")
+            print(f"Class {class_idx} IoU: {iou:.4f}")
+            wandb.log({"class index": class_idx, "Per class test mIoU": iou})
+            wandb.log({f"Class {class_idx} validation IoU": iou})
 
         return
 

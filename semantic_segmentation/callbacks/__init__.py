@@ -3,5 +3,5 @@ from callbacks.postprocessor import get_postprocessors, PostprocessorrCallback, 
 from callbacks.config_callback import ConfigCallback
 from callbacks.logging_callbacks import (
 	ECECallback, controlEval, ValidationLossCallback, EntropyVisualizationCallback, IoUCallback, TrainLossCallback,
-	UncertaintyCallbacks, ECECallbackTest, TestLossCallback, IoUCallback
+	UncertaintyCallbacks, TestLossCallback, IoUCallback
 )
