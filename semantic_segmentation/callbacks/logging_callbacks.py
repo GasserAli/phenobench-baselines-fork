@@ -223,7 +223,6 @@ class ValidationLossCallback(Callback):
         super().__init__()
 
     def on_validation_epoch_end(self, trainer, pl_module):
-        #TODO: log the validation loss
         val_loss = trainer.callback_metrics.get("val_loss")
         if val_loss is not None:
             wandb.log({"val loss": val_loss})
@@ -250,8 +249,7 @@ class IoUCallback(Callback):
     def __init__(self):
         super().__init__()
 
-    def on_validation_epoch_end(self, trainer, pl_module):
-        #TODO: TASK: add per class validation IoU logging 
+    def on_validation_epoch_end(self, trainer, pl_module): 
         val_mIoU = trainer.callback_metrics.get("val_mIoU")
         if not val_mIoU:
             print(f"could not get the validation mIoU for epoch {trainer.current_epoch}")
@@ -276,7 +274,6 @@ class IoUCallback(Callback):
         return
     
     def on_train_epoch_end(self, trainer, pl_module):
-        #TODO: TASK: add per class validation IoU logging 
         train_mIoU = trainer.callback_metrics.get("train_mIoU")
         if not train_mIoU:
             print(f"Could not get train mIoU for epoch {trainer.current_epoch}")
@@ -300,7 +297,6 @@ class IoUCallback(Callback):
         return
 
     def on_test_epoch_end(self, trainer, pl_module):
-         #TODO: TASK: add per class validation IoU logging 
         test_mIoU = trainer.callback_metrics.get("test_mIoU")
         if not test_mIoU:
             print(f"Could not get test mIoU for epoch {trainer.current_epoch}")
