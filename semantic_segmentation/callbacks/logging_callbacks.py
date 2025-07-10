@@ -17,11 +17,18 @@ class ECECallback(Callback):
         super().__init__()
         self.predictions = []
         self.targets = []
-        self.ece_metric= MulticlassCalibrationError(
+        self.ece_metric_val= MulticlassCalibrationError(
             num_classes=3,  
             norm='l1',  
             n_bins=20 # Number of bins for calibration error
         )
+        
+        self.ece_metric_test= MulticlassCalibrationError(
+            num_classes=3,  
+            norm='l1',  
+            n_bins=20 # Number of bins for calibration error
+        )
+
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
         # print("entered on validation batch end in logging callbacks")
@@ -35,7 +42,7 @@ class ECECallback(Callback):
             logits = softmaxPostprocessor.process_logits(logits)
             # print('\n',"softmax shape:", logits.shape,'\n')
 
-            self.ece_metric.update(logits, y)
+            self.ece_metric_val.update(logits, y)
             # self.predictions.append(logits.detach().cpu())
             # self.targets.append(y.detach().cpu())
     
@@ -56,6 +63,48 @@ class ECECallback(Callback):
             norm='l1'
         )
     
+    def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        
+        y = batch["anno"]
+        # print('\n',"batch anno shape",batch["anno"].shape,'\n')
+
+        softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
+        logits = outputs["logits"]
+        # print('\n',"preprocessing logits shape:",logits.shape,'\n')
+        logits = softmaxPostprocessor.process_logits(logits)
+
+        self.ece_metric_test.update(logits, y)
+            
+    def on_test_end(self, trainer, pl_module):
+        print('\n',"entered on test end in logging callbacks"'\n')
+        ece = self.ece_metric_test.compute()
+        # ece = self._compute_ece(preds, targets)
+        print('\n',"ECE Test is:", ece,'\n')
+        wandb.log({"ECE Test Dataset": ece})
+
+
+    def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        y = batch["anno"]
+        # print('\n',"batch anno shape",batch["anno"].shape,'\n')
+
+        softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
+        logits = outputs["logits"]
+        # print('\n',"preprocessing logits shape:",logits.shape,'\n')
+        logits = softmaxPostprocessor.process_logits(logits)
+        # print('\n',"softmax shape:", logits.shape,'\n')
+
+        self.ece_metric_test.update(logits, y)
+        # self.predictions.append(logits.detach().cpu())
+        # self.targets.append(y.detach().cpu())
+            
+    def on_test_end(self, trainer, pl_module):
+        print('\n',"entered on test end in logging callbacks"'\n')
+        ece = self.ece_metric_test.compute()
+        # ece = self._compute_ece(preds, targets)
+        print('\n',"ECE Test is:", ece,'\n')
+        wandb.log({"ECE Test Dataset": ece})
+       
+                   
 class controlEval(Callback):
 
     def __init__(self):
@@ -133,10 +182,29 @@ class EntropyVisualizationCallback(Callback):
             # print(f"Saved entropy image to {fpath}")
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        if trainer.current_epoch == (trainer.max_epochs-1) and batch_idx == trainer.num_val_batches[0]-1:
+        filenames = batch["fname"]
+
+        path = os.path.join(trainer.log_dir, "val", "logging", f'epoch-{trainer.current_epoch:06d}')
+        if not os.path.exists(path):
+            os.makedirs(path, exist_ok=True)
+        
+        softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
+        logits = outputs["logits"]
+        # print(logits.shape)
+        softmax_logits = softmaxPostprocessor.process_logits(logits)
+        # print(softmax_logits.shape)
+        entropy = self.calculate_entropy_image(softmax_logits)
+        self.save_entropy_images(entropy, filenames, path)
+        return
+    
+    def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        
+        if batch_idx == trainer.num_test_batches[0]-1:
+            print("visualization callback on test batch end")
+            
             filenames = batch["fname"]
 
-            path = os.path.join(trainer.log_dir, "val", "logging", f'epoch-{trainer.current_epoch:06d}')
+            path = os.path.join(trainer.log_dir, "test", "logging", f'epoch-{trainer.current_epoch:06d}')
             if not os.path.exists(path):
                 os.makedirs(path, exist_ok=True)
         
@@ -164,6 +232,20 @@ class ValidationLossCallback(Callback):
             print("\nCouldn't log validation loss as val_loss is None \n")
         return
     
+class TestLossCallback(Callback):
+    def __init__(self):
+        super().__init__()
+
+    def on_test_epoch_end(self, trainer, pl_module):
+        test_loss = trainer.callback_metrics.get("test_loss")
+        print("trainer callback keys(): ",trainer.callback_metrics.keys())
+        if test_loss is not None:
+            wandb.log({"test loss": test_loss})
+            print(f"\nlogged test_loss: {test_loss}\n")
+        else:
+            print("\nCouldn't log validation loss as test_loss is None \n")
+        return
+        
 class IoUCallback(Callback):
     def __init__(self):
         super().__init__()
@@ -214,6 +296,30 @@ class IoUCallback(Callback):
                 print(f"Class {class_idx} IoU: {iou:.4f}")
                 wandb.log({"class index": class_idx, "Per class training mIoU": iou})
                 wandb.log({f"Class {class_idx} validation IoU": iou})
+
+        return
+
+    def on_test_epoch_end(self, trainer, pl_module):
+         #TODO: TASK: add per class validation IoU logging 
+        test_mIoU = trainer.callback_metrics.get("test_mIoU")
+        if not test_mIoU:
+            print(f"Could not get test mIoU for epoch {trainer.current_epoch}")
+        else:
+            wandb.log({"test mIoU": test_mIoU})
+            print(f"test mIoU=: {test_mIoU}")
+        
+        if test_mIoU:
+            wandb.log({"Final test mIoU": test_mIoU})
+
+        wandb.define_metric(name = "Per class test mIoU", step_metric= "class index")
+
+        #TODO: hard coded value check if it is possible to get it from a network component  
+        num_classes = 3 
+        for class_idx in range(num_classes):
+            iou = trainer.callback_metrics.get(f"test_iou_class_{class_idx}")
+            print(f"Class {class_idx} IoU: {iou:.4f}")
+            wandb.log({"class index": class_idx, "Per class test mIoU": iou})
+            wandb.log({f"Class {class_idx} validation IoU": iou})
 
         return
 
@@ -285,3 +391,7 @@ class UncertaintyCallbacks(Callback):
             validationUncertainty = torch.tensor(self.validationSamples).mean().item()
             wandb.log({"Average validation samples entropy": validationUncertainty})
         return  
+    
+
+
+

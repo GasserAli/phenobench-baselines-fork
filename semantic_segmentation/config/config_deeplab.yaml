@@ -3,7 +3,8 @@ experiment:
   id: phenobench
 data:
   name: PDC
-  path_to_dataset: /scratch/gasser.emara/PhenoBench
+  # path_to_dataset: /scratch/gasser.emara/PhenoBench
+  path_to_dataset: /scratch/malek.ahmed/PhenoBench-v110/PhenoBench
   num_workers: 4
   image_normalizer:
     name: single_image_normalizer
@@ -71,9 +72,9 @@ test:
   n_gpus: 1
   batch_size: 4
   geometric_data_augmentations:
-    center_crop:
-      height: 1024
-      width: 1024
+    image_resize:
+      x_resize: 128
+      y_resize: 128
 visualizers:
   input_image_visualizer: null
   semantic_map_visualizer:

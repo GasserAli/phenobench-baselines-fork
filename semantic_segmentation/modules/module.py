@@ -224,13 +224,20 @@ class SegmentationNetwork(pl.LightningModule):
     # compute final metrics over all batches
     iou_per_class = self.metric_test_iou.compute()
     mIoU = round(float(iou_per_class.mean().cpu()), 3)
-    print(f"Test mIoU: {mIoU}")
+    print(f"Test mIoU from Module: {mIoU}")
+    
+    #add to the logger
+    self.log("test_mIoU", mIoU, on_epoch=True, sync_dist=False)
+    for class_index, iou_class in enumerate(iou_per_class):
+      self.log(f"test_iou_class_{class_index}", iou_class, on_epoch=True, sync_dist=False)
+    
+    self.log("iou_per_class", iou_per_class, on_epoch=True, sync_dist=False)
     self.metric_test_iou.reset()
 
     epoch = self.trainer.current_epoch
     
     #TODO: Should add "test" to the dir name 
-    path_to_classwise_iou_dir = os.path.join(self.trainer.log_dir, 'evaluation', 'iou-classwise',  f'epoch-{epoch:06d}')
+    path_to_classwise_iou_dir = os.path.join(self.trainer.log_dir, 'evaluation','test', 'iou-classwise',  f'epoch-{epoch:06d}')
     save_iou_metric(iou_per_class, path_to_classwise_iou_dir)
 
   #TODO: for malek: probably need to return 1 here so that no lr scaling occurs
