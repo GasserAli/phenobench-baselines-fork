@@ -179,6 +179,9 @@ if __name__ == '__main__':
         'learning_rate': {
             'values': [0.0001]
         },
+        'resize' : {
+          'values' : [128]
+        }
     }
   }
 
