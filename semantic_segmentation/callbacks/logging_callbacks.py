@@ -50,7 +50,7 @@ class ECECallback(Callback):
         # print('\n',"entered on validation end in logging callbacks"'\n')
 
         if trainer.current_epoch == (trainer.max_epochs-1):
-            ece = self.ece_metric.compute()
+            ece = self.ece_metric_val.compute()
             # ece = self._compute_ece(preds, targets)
             print('\n',"ECE is:", ece,'\n')
             wandb.log({"ECE Validation Dataset": ece})
@@ -155,7 +155,7 @@ class EntropyVisualizationCallback(Callback):
             path_to_dir: Directory to save images
         """
 
-        print(f"\n entropy tensor shape: {entropy_tensor.shape}\n")
+        # print(f"\n entropy tensor shape: {entropy_tensor.shape}\n")
         path_to_dir = os.path.join(path_to_dir, self.name)
         if not os.path.exists(path_to_dir):
             os.makedirs(path_to_dir, exist_ok=True)

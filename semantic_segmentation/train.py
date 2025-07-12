@@ -83,6 +83,7 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str, resi
                                             optimizer,
                                             train_step_settings = cfg['train']['step_settings'], 
                                             val_step_settings = cfg['val']['step_settings'],
+                                            test_step_settings=cfg['test']['step_settings'],
                                             ckpt_path = args['ckpt_path'])
   else:
     seg_module = module.SegmentationNetwork(network, 
@@ -91,7 +92,8 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str, resi
                                             cfg['train']['weight_decay'], 
                                             optimizer,
                                             train_step_settings = cfg['train']['step_settings'],
-                                            val_step_settings = cfg['val']['step_settings'])
+                                            val_step_settings = cfg['val']['step_settings'],
+                                            test_step_settings=cfg['test']['step_settings'])
 
   # Add callbacks
   lr_monitor = LearningRateMonitor(logging_interval='epoch')
@@ -142,12 +144,16 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str, resi
   if args['ckpt_path'] is None:
     print("Train from scratch.")
     trainer.fit(seg_module, datasetmodule)
+    trainer.test(seg_module, datasetmodule)
   elif (args['ckpt_path'] is not None) and (not args['resume']):
     print("Load pretrained model weights but other params (e.g. learning rate) start from scratch.")
     trainer.fit(seg_module, datasetmodule)
+    trainer.test(seg_module, datasetmodule)
   elif (args['ckpt_path'] is not None) and args['resume']:
     print("Load pretrained model weights and resume training.")
     trainer.fit(seg_module, datasetmodule, ckpt_path=args['ckpt_path'])
+    trainer.test(seg_module, datasetmodule, ckpt_path=args['ckpt_path'])
+
   else:
     raise RuntimeError("Can't train any model since the settings are invalid.")
 
@@ -171,20 +177,20 @@ if __name__ == '__main__':
     },
     'parameters': {
         'batch_size': {
-            'values': [8, 16, 32]
+            'values': [32]
         },
         'optimizer': {
             'values': ['adam', 'adamw', 'rmsprop']
         },
         'learning_rate': {
-            'values': [0.0001]
+            'values': [5.0e-4]
         },
         'resize' : {
-          'values' : [128]
+          'values' : [256]
         }
     }
   }
 
-  sweep_id = wandb.sweep(sweep_config, project="newPhenoTest")
+  sweep_id = wandb.sweep(sweep_config, project="newPhenoTrainTest")
   # train()
-  wandb.agent(sweep_id = sweep_id, project="newPhenoTest", function=train)
+  wandb.agent(sweep_id = sweep_id, project="newPhenoTrainTest", function=train, count=1)
