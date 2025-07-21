@@ -48,12 +48,10 @@ class ECECallback(Callback):
     
     def on_validation_end(self, trainer, pl_module):
         # print('\n',"entered on validation end in logging callbacks"'\n')
-
-        if trainer.current_epoch == (trainer.max_epochs-1):
-            ece = self.ece_metric_val.compute()
-            # ece = self._compute_ece(preds, targets)
-            print('\n',"ECE is:", ece,'\n')
-            wandb.log({"ECE Validation Dataset": ece})
+        ece = self.ece_metric_val.compute()
+        # ece = self._compute_ece(preds, targets)
+        print('\n',"ECE is:", ece,'\n')
+        wandb.log({"ECE Validation Dataset": ece})
 
     def _compute_ece(self, preds, targets, n_bins=15):
         return calibration_error(
@@ -82,27 +80,6 @@ class ECECallback(Callback):
         print('\n',"ECE Test is:", ece,'\n')
         wandb.log({"ECE Test Dataset": ece})
 
-
-    def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        y = batch["anno"]
-        # print('\n',"batch anno shape",batch["anno"].shape,'\n')
-
-        softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
-        logits = outputs["logits"]
-        # print('\n',"preprocessing logits shape:",logits.shape,'\n')
-        logits = softmaxPostprocessor.process_logits(logits)
-        # print('\n',"softmax shape:", logits.shape,'\n')
-
-        self.ece_metric_test.update(logits, y)
-        # self.predictions.append(logits.detach().cpu())
-        # self.targets.append(y.detach().cpu())
-            
-    def on_test_end(self, trainer, pl_module):
-        print('\n',"entered on test end in logging callbacks"'\n')
-        ece = self.ece_metric_test.compute()
-        # ece = self._compute_ece(preds, targets)
-        print('\n',"ECE Test is:", ece,'\n')
-        wandb.log({"ECE Test Dataset": ece})
        
                    
 class controlEval(Callback):
@@ -255,22 +232,18 @@ class IoUCallback(Callback):
             print(f"could not get the validation mIoU for epoch {trainer.current_epoch}")
         else:
             wandb.log({"validation mIoU": val_mIoU})
+
+
+        wandb.define_metric(name = "Per class validation mIoU", step_metric= "class index")
+
+        #TODO: hard coded value check if it is possible to get it from a network component  
+        num_classes = 3 
+        for class_idx in range(num_classes):
+            iou = trainer.callback_metrics.get(f"iou_class_{class_idx}")
+            # print(f"Class {class_idx} IoU: {iou:.4f}")
+            wandb.log({"class index": class_idx, "Per class validation mIoU": iou})
+            wandb.log({f"Class {class_idx} validation IoU": iou})
         
-        if(trainer.current_epoch == trainer.max_epochs-1) and val_mIoU:
-            wandb.log({"Final validation mIoU": val_mIoU})
-
-
-        if trainer.current_epoch == trainer.max_epochs-1:
-            wandb.define_metric(name = "Per class validation mIoU", step_metric= "class index")
-
-            #TODO: hard coded value check if it is possible to get it from a network component  
-            num_classes = 3 
-            for class_idx in range(num_classes):
-                iou = trainer.callback_metrics.get(f"iou_class_{class_idx}")
-                # print(f"Class {class_idx} IoU: {iou:.4f}")
-                wandb.log({"class index": class_idx, "Per class validation mIoU": iou})
-                wandb.log({f"Class {class_idx} validation IoU": iou})
-            
         return
     
     def on_train_epoch_end(self, trainer, pl_module):
@@ -279,20 +252,16 @@ class IoUCallback(Callback):
             print(f"Could not get train mIoU for epoch {trainer.current_epoch}")
         else:
             wandb.log({"train mIoU": train_mIoU})
-        
-        if trainer.current_epoch == (trainer.max_epochs-1) and train_mIoU:
-            wandb.log({"Final train mIoU": train_mIoU})
 
-        if trainer.current_epoch == trainer.max_epochs-1:
-            wandb.define_metric(name = "Per class training mIoU", step_metric= "class index")
+        wandb.define_metric(name = "Per class training mIoU", step_metric= "class index")
 
-            #TODO: hard coded value check if it is possible to get it from a network component  
-            num_classes = 3 
-            for class_idx in range(num_classes):
-                iou = trainer.callback_metrics.get(f"iou_class_{class_idx}")
-                print(f"Class {class_idx} IoU: {iou:.4f}")
-                wandb.log({"class index": class_idx, "Per class training mIoU": iou})
-                wandb.log({f"Class {class_idx} validation IoU": iou})
+        #TODO: hard coded value check if it is possible to get it from a network component  
+        num_classes = 3 
+        for class_idx in range(num_classes):
+            iou = trainer.callback_metrics.get(f"iou_class_{class_idx}")
+            print(f"Class {class_idx} IoU: {iou:.4f}")
+            wandb.log({"class index": class_idx, "Per class training mIoU": iou})
+            wandb.log({f"Class {class_idx} validation IoU": iou})
 
         return
 
@@ -303,9 +272,6 @@ class IoUCallback(Callback):
         else:
             wandb.log({"test mIoU": test_mIoU})
             print(f"test mIoU=: {test_mIoU}")
-        
-        if test_mIoU:
-            wandb.log({"Final test mIoU": test_mIoU})
 
         wandb.define_metric(name = "Per class test mIoU", step_metric= "class index")
 
@@ -360,14 +326,13 @@ class UncertaintyCallbacks(Callback):
         return
     
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        if trainer.current_epoch == trainer.max_epochs-1:
-            preds = outputs["logits"]
+        preds = outputs["logits"]
 
-            softmax_values = self.softmaxProcessor.process_logits(preds)
+        softmax_values = self.softmaxProcessor.process_logits(preds)
 
-            batch_mean = self._calculate_mean_entropy_batch(softmax_values)
-            
-            self.validationSamples.append(batch_mean)
+        batch_mean = self._calculate_mean_entropy_batch(softmax_values)
+        
+        self.validationSamples.append(batch_mean)
 
         return
          
@@ -382,12 +347,8 @@ class UncertaintyCallbacks(Callback):
         return 
     
         
-    def on_fit_end(self, trainer, pl_module):
+    def on_validaiton_epoch_end(self, trainer, pl_module):
         if self.validationSamples:
             validationUncertainty = torch.tensor(self.validationSamples).mean().item()
             wandb.log({"Average validation samples entropy": validationUncertainty})
         return  
-    
-
-
-

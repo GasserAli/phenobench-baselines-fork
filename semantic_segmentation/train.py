@@ -116,7 +116,6 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str, resi
   eceCallback = ECECallback()
   entropyVisualizationCallback = EntropyVisualizationCallback()
   iouCallback = IoUCallback()
-  trainLossCallback = TrainLossCallback()
   validationLossCallback = ValidationLossCallback()
   UncertaintyCallback = UncertaintyCallbacks()
 
@@ -137,7 +136,6 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str, resi
                  eceCallback,
                  entropyVisualizationCallback,
                  iouCallback,
-                 trainLossCallback,
                  validationLossCallback,
                  UncertaintyCallback])
 
