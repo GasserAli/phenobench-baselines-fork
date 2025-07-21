@@ -10,3 +10,4 @@ requirements.txt
 /q.log
 /new-exports
 /new-exports-named-runs
+/semantic_segmentation/Best-val-loss-model-weights

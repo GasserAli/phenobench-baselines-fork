@@ -162,14 +162,20 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str, resi
 
 def train(config = None):
   args = parse_args()
-  model_ckpt_paths = {"adam": {8: {128: f"", 256: f""},
-                              16: {128: f"", 256: f""},
-                              32: {128: f"", 256: f""}
+  model_ckpt_paths = {"adam": {8: {128: r"D:\BSc\phenobench-baselines-fork\semantic_segmentation\Best-val-loss-model-weights\adam,8,128 phenobench_epoch=243_val_loss=0.2354.ckpt", 
+                                   256: r"D:\BSc\phenobench-baselines-fork\semantic_segmentation\Best-val-loss-model-weights\adam,8,256 phenobench_epoch=226_val_loss=0.1348.ckpt"},
+                              16: {128: r"D:\BSc\phenobench-baselines-fork\semantic_segmentation\Best-val-loss-model-weights\adam,16,128 phenobench_epoch=199_val_loss=0.2381.ckpt", 
+                                   256: r"D:\BSc\phenobench-baselines-fork\semantic_segmentation\Best-val-loss-model-weights\adam,16,256 phenobench_epoch=241_val_loss=0.1342.ckpt"},
+                              32: {128: r"D:\BSc\phenobench-baselines-fork\semantic_segmentation\Best-val-loss-model-weights\adam,32,128 phenobench_epoch=237_val_loss=0.2373.ckpt", 
+                                   256: r"D:\BSc\phenobench-baselines-fork\semantic_segmentation\Best-val-loss-model-weights\adam,32,256 phenobench_epoch=237_val_loss=0.1319.ckpt"}
                               },
-                      "adamw":{8: {128: f"", 256: f""},
-                              16: {128: f"", 256: f""},
-                              32: {128: f"", 256: f""}
-                              },
+                      "adamw":{8: {128: r"D:\BSc\phenobench-baselines-fork\semantic_segmentation\Best-val-loss-model-weights\adamw,8,128 phenobench_epoch=195_val_loss=0.1022.ckpt", 
+                                   256: r"D:\BSc\phenobench-baselines-fork\semantic_segmentation\Best-val-loss-model-weights\adamw,8,256 phenobench_epoch=154_val_loss=0.0584.ckpt"},
+                              16: {128: r"D:\BSc\phenobench-baselines-fork\semantic_segmentation\Best-val-loss-model-weights\adamw,16,128 phenobench_epoch=200_val_loss=0.1028.ckpt",
+                                   256: r"D:\BSc\phenobench-baselines-fork\semantic_segmentation\Best-val-loss-model-weights\adamw,16,256 phenobench_epoch=147_val_loss=0.0596.ckpt"},
+                              32: {128: r"D:\BSc\phenobench-baselines-fork\semantic_segmentation\Best-val-loss-model-weights\adamw,32,128 phenobench_epoch=229_val_loss=0.1045.ckpt", 
+                                   256: r"D:\BSc\phenobench-baselines-fork\semantic_segmentation\Best-val-loss-model-weights\adamw,32,256 phenobench_epoch=213_val_loss=0.0594.ckpt"}
+                              }
                       }
 
   with wandb.init(config=config):
