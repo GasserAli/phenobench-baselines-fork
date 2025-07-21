@@ -3,8 +3,8 @@ experiment:
   id: phenobench
 data:
   name: PDC
-  # path_to_dataset: /scratch/gasser.emara/PhenoBench
-  path_to_dataset: /scratch/malek.ahmed/PhenoBench-v110/PhenoBench
+  path_to_dataset: /scratch/gasser.emara/PhenoBench
+  # path_to_dataset: /scratch/malek.ahmed/PhenoBench-v110/PhenoBench
   num_workers: 4
   image_normalizer:
     name: single_image_normalizer
@@ -15,7 +15,7 @@ backbone:
 train:
   step_settings:
     - regular
-  max_epoch: 2
+  max_epoch: 250
   n_gpus: 1
   benchmark: true
   loss: xentropy
@@ -27,7 +27,7 @@ train:
     - 10.02
   batch_size: 32
   shuffle: true
-  vis_train_every_x_epochs: 1
+  vis_train_every_x_epochs: 125
   postprocess_train_every_x_epochs: 1
   color_data_augmentations:
     random_global_brightness:
@@ -57,8 +57,8 @@ val:
   n_gpus: 1
   batch_size: 32
   check_val_every_n_epoch: 1
-  vis_val_every_x_epochs:  256
-  postprocess_val_every_x_epochs: 256
+  vis_val_every_x_epochs:  125
+  postprocess_val_every_x_epochs: 125
   geometric_data_augmentations:
     image_resize:
       x_resize: 128

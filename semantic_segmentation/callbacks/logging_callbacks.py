@@ -182,19 +182,19 @@ class EntropyVisualizationCallback(Callback):
             # print(f"Saved entropy image to {fpath}")
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
-        filenames = batch["fname"]
-
-        path = os.path.join(trainer.log_dir, "val", "logging", f'epoch-{trainer.current_epoch:06d}')
-        if not os.path.exists(path):
-            os.makedirs(path, exist_ok=True)
-        
-        softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
-        logits = outputs["logits"]
-        # print(logits.shape)
-        softmax_logits = softmaxPostprocessor.process_logits(logits)
-        # print(softmax_logits.shape)
-        entropy = self.calculate_entropy_image(softmax_logits)
-        self.save_entropy_images(entropy, filenames, path)
+        if trainer.current_epoch == trainer.max_epoch-1 and trainer.num_validation_batches[0]-1:
+            filenames = batch["fname"]
+            path = os.path.join(trainer.log_dir, "val", "logging", f'epoch-{trainer.current_epoch:06d}')
+            if not os.path.exists(path):
+                os.makedirs(path, exist_ok=True)
+            
+            softmaxPostprocessor = ProbablisticSoftmaxPostprocessor()
+            logits = outputs["logits"]
+            # print(logits.shape)
+            softmax_logits = softmaxPostprocessor.process_logits(logits)
+            # print(softmax_logits.shape)
+            entropy = self.calculate_entropy_image(softmax_logits)
+            self.save_entropy_images(entropy, filenames, path)
         return
     
     def on_test_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):

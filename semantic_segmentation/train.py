@@ -177,10 +177,10 @@ if __name__ == '__main__':
     },
     'parameters': {
         'batch_size': {
-            'values': [32]
+            'values': [8,16,32]
         },
         'optimizer': {
-            'values': ['adam', 'adamw', 'rmsprop']
+            'values': ['adam']
         },
         'learning_rate': {
             'values': [5.0e-4]
@@ -191,6 +191,6 @@ if __name__ == '__main__':
     }
   }
 
-  sweep_id = wandb.sweep(sweep_config, project="newPhenoTrainTest")
+  sweep_id = wandb.sweep(sweep_config, project="PhenoBench-Second-Sweep")
   # train()
-  wandb.agent(sweep_id = sweep_id, project="newPhenoTrainTest", function=train, count=1)
+  wandb.agent(sweep_id = sweep_id, project="PhenoBench-Second-Sweep", function=train)

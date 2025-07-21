@@ -8,3 +8,5 @@ requirements.txt
 /semantic_segmentation/exports
 /semantic_segmentation/wandb
 /q.log
+/new-exports
+/new-exports-named-runs
