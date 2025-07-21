@@ -60,7 +60,8 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str, resi
     cfg[f"{i}"]["geometric_data_augmentations"]["image_resize"]["y_resize"] = resize
     if i == "train":
       cfg[f"{i}"]["learning_rate"] = learning_rate
-  print(cfg)
+  print(f"config: {cfg}")
+  print(f"args: {args}")
 
   if cfg.get('seed') is None:
     seed_val = int(time.time())
@@ -83,8 +84,8 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str, resi
                                             optimizer,
                                             train_step_settings = cfg['train']['step_settings'], 
                                             val_step_settings = cfg['val']['step_settings'],
-                                            test_step_settings=cfg['test']['step_settings'],
-                                            ckpt_path = args['ckpt_path'])
+                                            test_step_settings=cfg['test']['step_settings'])
+                                            # ckpt_path = args['ckpt_path'])
   else:
     seg_module = module.SegmentationNetwork(network, 
                                             criterion, 
@@ -134,31 +135,44 @@ def main(args: dict, learning_rate: float, batch_size: int, optimizer: str, resi
                  postprocessor_callback, 
                  config_callback,
                  eceCallback,
-                 eceCallback,
                  entropyVisualizationCallback,
                  iouCallback,
                  trainLossCallback,
                  validationLossCallback,
                  UncertaintyCallback])
 
-  if args['ckpt_path'] is None:
-    print("Train from scratch.")
-    trainer.fit(seg_module, datasetmodule)
-    trainer.test(seg_module, datasetmodule)
-  elif (args['ckpt_path'] is not None) and (not args['resume']):
-    print("Load pretrained model weights but other params (e.g. learning rate) start from scratch.")
-    trainer.fit(seg_module, datasetmodule)
-    trainer.test(seg_module, datasetmodule)
-  elif (args['ckpt_path'] is not None) and args['resume']:
-    print("Load pretrained model weights and resume training.")
-    trainer.fit(seg_module, datasetmodule, ckpt_path=args['ckpt_path'])
+  # if args['ckpt_path'] is None:
+  #   print("Train from scratch.")
+  #   trainer.fit(seg_module, datasetmodule)
+  #   trainer.test(seg_module, datasetmodule)
+  # elif (args['ckpt_path'] is not None) and (not args['resume']):
+  #   print("Load pretrained model weights but other params (e.g. learning rate) start from scratch.")
+  #   trainer.fit(seg_module, datasetmodule)
+  #   trainer.test(seg_module, datasetmodule)
+  # elif (args['ckpt_path'] is not None) and args['resume']:
+  #   print("Load pretrained model weights and resume training.")
+  #   trainer.fit(seg_module, datasetmodule, ckpt_path=args['ckpt_path'])
+  #   trainer.test(seg_module, datasetmodule, ckpt_path=args['ckpt_path'])
+
+  # else:
+  #   raise RuntimeError("Can't train any model since the settings are invalid.")
+
+  if args['ckpt_path'] is not None:
+    trainer.validate(seg_module, datasetmodule, ckpt_path=args['ckpt_path'])
     trainer.test(seg_module, datasetmodule, ckpt_path=args['ckpt_path'])
 
-  else:
-    raise RuntimeError("Can't train any model since the settings are invalid.")
 
 def train(config = None):
   args = parse_args()
+  model_ckpt_paths = {"adam": {8: {128: f"", 256: f""},
+                              16: {128: f"", 256: f""},
+                              32: {128: f"", 256: f""}
+                              },
+                      "adamw":{8: {128: f"", 256: f""},
+                              16: {128: f"", 256: f""},
+                              32: {128: f"", 256: f""}
+                              },
+                      }
 
   with wandb.init(config=config):
     config = wandb.config
@@ -166,6 +180,7 @@ def train(config = None):
     batch_size = config.batch_size
     optimizer = config.optimizer
     resize = config.resize
+    args["ckpt_path"] = model_ckpt_paths[optimizer][batch_size][resize]
     main(args, learning_rate, batch_size, optimizer, resize)
 
 if __name__ == '__main__':
@@ -180,17 +195,17 @@ if __name__ == '__main__':
             'values': [8,16,32]
         },
         'optimizer': {
-            'values': ['adam']
+            'values': ['adam','adamw']
         },
         'learning_rate': {
             'values': [5.0e-4]
         },
         'resize' : {
-          'values' : [256]
+          'values' : [128,256]
         }
     }
   }
 
-  sweep_id = wandb.sweep(sweep_config, project="PhenoBench-Second-Sweep")
+  sweep_id = wandb.sweep(sweep_config, project="PhenoBench-Best-Model-Sweep")
   # train()
-  wandb.agent(sweep_id = sweep_id, project="PhenoBench-Second-Sweep", function=train)
+  wandb.agent(sweep_id = sweep_id, project="PhenoBench-Best-Model-Sweep", function=train)
